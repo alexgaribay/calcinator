@@ -4,7 +4,7 @@ defmodule Calcinator.Resources do
   """
 
   alias Alembic.{Document, Error, Source}
-  alias Resources.Page
+  alias Calcinator.Resources.Page
 
   # Types
 

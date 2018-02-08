@@ -54,6 +54,126 @@ In addition to pagination in `page`, `Calcinator.Resources.query_options` suppor
 (after being converted using `%Calcinator{}` `associations_by_include`), `filters` for JSONAPI filters that are passed
 through directly, and `sorts` for JSONAPI sort.
 
+#### `Calcinator.Resources.Ecto.Repo`
+
+Pagination for `Calcinator.Resources.Ecto.Repo` is opt-in and needs to be configured.
+
+##### Configuration
+
+```elixir
+config :calcinator, Calcinator.Resources.Ecto.Repo, paginator: paginator
+````
+
+##### Paginators
+
+Returns based on `paginator` and `query_options` `page`
+
+<table>
+  <thead>
+    <tr>
+      <th>
+        <code>config :calcinator, Calcinator.Resources.Ecto.Repo, paginator: paginator</code>
+      </th>
+      <th colspan="2">
+        <code>query_options[:page]</code>
+      </th>
+      <th rowspan="2">Description</th>
+    </tr>
+    <tr>
+      <th>
+        <code>paginator</code>
+      </th>
+      <th>
+        <code>nil</code>
+      </th>
+      <th>
+        <code>%Calcinator.Resources.Page{}</code>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <code>Calcinator.Resources.Ecto.Repo.Pagination.Ignore</code>
+      </td>
+      <td>
+        <code>{:ok, all_resources, nil}</code>
+      </td>
+      <td>
+        <code>{:ok, all_resources, nil}</code>
+      </td>
+      <td>
+        <code>query_options[:page]</code> is ignored: all resources are
+        always returned.  There is no pagination information ever
+        returned.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>Calcinator.Resources.Ecto.Repo.Pagination.Disallow</code>
+      </td>
+      <td>
+        <code>{:ok, all_resources, nil}</code>
+      </td>
+      <td>
+        <code>{:error, %Alembic.Document{}}</code>
+      </td>
+      <td>
+        All resources with <code>nil</code> pagination is returned when
+        <code>query_options[:page]</code> is <code>nil</code>, but an
+        error is returns if <code>query_optons[:page]</code> is not nil.
+        This is an improvement over
+        <code>Calcinator.Resources.Ecto.Repo.Pagination.Ignore</code>
+        because it will tell callers that
+        <code>query_options[:page]</code> will not be honored.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>Calcinator.Resources.Ecto.Repo.Pagination.Allow</code>
+      </td>
+      <td>
+        <code>{:ok, all_resources, nil}</code>
+      </td>
+      <td>
+        <code>{:ok, page_of_resources, %Alembic.Pagination{}}</code>
+      </td>
+      <td>
+        All resources with <code>nil</code> pagination is returned when
+        <code>query_options[:page]</code> is <code>nil</code>.  A page
+        of resources with the pagination information is returned when
+        <code>query_options[:page]</code> is not <code>nil</code>.
+        <strong>This is the default paginator.</strong>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <code>Calcinator.Resources.Ecto.Repo.Pagination.Require</code>
+      </td>
+      <td>
+        <code>{:error, %Alembic.Document{}</code>
+      </td>
+      <td>
+        <code>{:ok, page_of_resources, %Alembic.Pagination{}}</code>
+      </td>
+      <td>
+        An error is returned when <code>query_options[:page]</code> is
+        <code>nil</code>.  A page of resources with the pagination
+        information is returned when <code>query_options[:page]</code>
+        is not <code>nil</code>.  This is a stronger form of
+        <code>Calcinator.Resources.Ecto.Repo.Pagination.Allow</code>
+        because it forces the caller to declare what page it wants.
+        Using
+        <code>Calcinator.Resources.Ecto.Repo.Pagination.Require</code>
+        is recommended when not paginating would have a detrimental
+        performance impact.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+If you want to define your own paginator, it must implement the `Calcinator.Resources.Ecto.Repo.Pagination` behaviour.
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:

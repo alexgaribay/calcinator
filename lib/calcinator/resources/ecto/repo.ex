@@ -307,27 +307,24 @@ defmodule Calcinator.Resources.Ecto.Repo do
 
   ## Returns
 
-    * `{:error, Alembic.Document.t}` - JSONAPI error listing the unknown filters in `opts`
-    * `{:error, :ownership}` - connection to backing store was not owned by the calling process
+    * `{:error, Alembic.Document.t}` - JSONAPI error listing the unknown filters in `opts`.
+    * `{:error, :ownership}` - connection to backing store was not owned by the calling process.
     * `{:ok, [struct], nil}` - `[struct]` is the list of all `module` `ecto_schema_module/0` in `module` `repo/0`.
-      There is no (current) support for pagination: pagination is the `nil` in the 3rd element of the tuple.
+    * `{:ok, [struct], Alembic.Pagination.t}` - `[struct]` is the list of one page of `module` `ecto_schema_module/0` in
+        `module` `repo/0`.
 
   """
   @spec list(module, Resources.query_options) ::
-          {:ok, [Ecto.Schema.t], nil} | {:error, :ownership} | {:error, Document.t}
+          {:ok, [Ecto.Schema.t], Alembic.Pagination.t | nil} | {:error, :ownership} | {:error, Document.t}
   def list(module, query_options) when is_map(query_options) do
     repo = module.repo()
     {:ok, query} = preload(module, module.ecto_schema_module(), query_options)
 
     with {:ok, query} <- filter(module, query, query_options) do
-      case wrap_ownership_error(repo, :all, [distinct(query, true)]) do
-        {:error, :ownership} ->
-          {:error, :ownership}
-        all ->
-          {:ok, all, nil}
-      end
+      paginate(repo, distinct(query, true), query_options)
     end
   end
+
 
   @doc """
   Whether `module` `repo/0` is sandboxed and `allow_sandbox_access/1` should be called.
@@ -374,6 +371,20 @@ defmodule Calcinator.Resources.Ecto.Repo do
     with {:ok, changeset} <- module.changeset(data, params) do
       module.update(changeset, query_options)
     end
+  end
+
+  @doc false
+  def wrap_ownership_error(repo, function, arguments) do
+    apply(repo, function, arguments)
+  rescue
+    ownership_error in DBConnection.OwnershipError ->
+      ownership_error
+      |> inspect()
+      |> Logger.error()
+
+      {:error, :ownership}
+  else
+    other -> other
   end
 
   ## Private Functions
@@ -442,6 +453,18 @@ defmodule Calcinator.Resources.Ecto.Repo do
            {id, found_associated}
          end
        )
+  end
+
+  @spec paginate(repo :: module, Ecto.Query.t, Resource.query_options) ::
+          {:ok, [Ecto.Schema.t], Alembic.Pagination.t | nil} | {:error, :ownership} | {:error, Document.t}
+  defp paginate(repo, query, query_options) do
+    paginator().paginate(repo, query, query_options)
+  end
+
+  defp paginator do
+    with nil <- Application.get_env(:calcinator, __MODULE__, [])[:paginator] do
+      Calcinator.Resources.Ecto.Repo.Pagination.Allow
+    end
   end
 
   defp preload(module, data_or_queryable, query_options) when is_map(query_options) do
@@ -566,18 +589,5 @@ defmodule Calcinator.Resources.Ecto.Repo do
       {:error, :ownership} -> {:error, :ownership}
       reloaded_updated -> {:ok, reloaded_updated}
     end
-  end
-
-  defp wrap_ownership_error(repo, function, arguments) do
-    apply(repo, function, arguments)
-  rescue
-    ownership_error in DBConnection.OwnershipError ->
-      ownership_error
-      |> inspect()
-      |> Logger.error()
-
-      {:error, :ownership}
-  else
-    other -> other
   end
 end
