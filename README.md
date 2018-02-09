@@ -72,6 +72,18 @@ Application.put_env(:calcinator, Calcinator.Resources.Page, size: [default: 10])
 
 When default page size is configured, a default page number of `1` is also assumed.
 
+##### Maximum
+
+```elixir
+config :calcinator, Calcinator.Resources.Page, size: [maximum: 25]
+```
+
+or at runtime using `Application.put_env/3`
+
+```elixir
+Application.put_env(:calcinator, Calcinator.Resources.Page, size: [maximum: 25])
+```
+
 #### `Calcinator.Resources.Ecto.Repo`
 
 Pagination for `Calcinator.Resources.Ecto.Repo` is opt-in and needs to be configured.

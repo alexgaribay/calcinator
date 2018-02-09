@@ -46,9 +46,9 @@ defmodule Calcinator.Resources.Page do
     * `size` - the size of each page.
   """
   @type t :: %__MODULE__{
-               number: pos_integer,
-               size: pos_integer
-             }
+          number: pos_integer,
+          size: pos_integer
+        }
 
   # Functions
 
@@ -141,6 +141,50 @@ defmodule Calcinator.Resources.Page do
         }
       }
 
+  ### Maximum size
+
+  The maximum size can be configured
+
+      config :calcinator, Calcinator.Resources.Page, size: [maximum: 20]
+
+  or at runtimew using `Application.put_env/3`
+
+      Application.put_env(:calcinator, Calcinator.Resources.Page, size: [maximum: 20]
+
+  If size exceeds the maximum size, an error will be returned.
+
+      iex> Application.put_env(:calcinator, Calcinator.Resources.Page, size: [maximum: 20])
+      iex> Calcinator.Resources.Page.from_params(%{"page" => %{"number" => 1, "size" => 25}})
+      {:error,
+       %Alembic.Document{
+         errors: [
+           %Alembic.Error{
+             detail: "Page size (25) is greater than the maximum (20).",
+             meta: %{"maximum" => 20},
+             source: %Alembic.Source{parameter: nil, pointer: "/page/size"},
+             status: "422",
+             title: "Exceeds Maximum"
+           }
+         ]
+       }}
+
+  The default size is also checked against the maximum size.
+
+      iex> Application.put_env(:calcinator, Calcinator.Resources.Page, size: [default: 25, maximum: 20])
+      iex> Calcinator.Resources.Page.from_params(%{})
+      {:error,
+       %Alembic.Document{
+         errors: [
+           %Alembic.Error{
+             detail: "Page size (25) is greater than the maximum (20).",
+             meta: %{"maximum" => 20},
+             source: %Alembic.Source{parameter: nil, pointer: "/page/size"},
+             status: "422",
+             title: "Exceeds Maximum"
+           }
+         ]
+       }}
+
   ## With default page size
 
   A default page size can be configured.
@@ -169,7 +213,6 @@ defmodule Calcinator.Resources.Page do
       iex> Application.put_env(:calcinator, Calcinator.Resources.Page, size: [default: 25])
       iex> Calcinator.Resources.Page.from_params(%{"page" => %{"number" => 2}})
       {:ok, %Calcinator.Resources.Page{number: 2, size: 25}}
-
 
   If there is a `"page"` key with both a `"number"` and `"size"` children, then the defaults are ignored and the number
   and size are used
@@ -273,7 +316,8 @@ defmodule Calcinator.Resources.Page do
   """
 
   def from_params(%{"page" => page}) when is_map(page) do
-    from_parent_json(%{error_template: @error_template, json: put_defaults(page)})
+    env = env()
+    from_parent_json(%{error_template: @error_template, json: put_defaults(page, env)}, env)
   end
 
   def from_params(%{"page" => page}) when not is_map(page) do
@@ -281,19 +325,20 @@ defmodule Calcinator.Resources.Page do
   end
 
   def from_params(params) when is_map(params) do
+    env = env()
+
     %{}
-    |> put_defaults()
+    |> put_defaults(env)
     |> case do
-         empty when map_size(empty) == 0 -> {:ok, nil}
-         page_params -> from_parent_json(%{error_template: @error_template, json: page_params})
-       end
+      empty when map_size(empty) == 0 -> {:ok, nil}
+      page_params -> from_parent_json(%{error_template: @error_template, json: page_params}, env)
+    end
   end
 
   def to_params(nil), do: %{}
 
   def to_params(%__MODULE__{number: number, size: size})
-      when is_integer(number) and number > 0 and
-           is_integer(size) and size > 0 do
+      when is_integer(number) and number > 0 and is_integer(size) and size > 0 do
     %{
       "page" => %{
         "number" => number,
@@ -314,9 +359,10 @@ defmodule Calcinator.Resources.Page do
     Application.get_env(:calcinator, __MODULE__) || []
   end
 
-  defp from_parent_json(parent) do
+  defp from_parent_json(parent, env) do
     @page_child_options_list
     |> Stream.map(&Map.put(&1, :parent, parent))
+    |> Stream.map(&put_maximum(&1, env))
     |> Stream.map(&FromJson.from_parent_json_to_field_result/1)
     |> FromJson.reduce({:ok, %__MODULE__{}})
   end
@@ -324,11 +370,13 @@ defmodule Calcinator.Resources.Page do
   defp integer_from_json(
          quoted_integer,
          error_template = %Error{
-           source: source = %Source{
-             pointer: pointer
-           }
+           source:
+             source = %Source{
+               pointer: pointer
+             }
          }
-       ) when is_binary(quoted_integer) do
+       )
+       when is_binary(quoted_integer) do
     case Integer.parse(quoted_integer) do
       :error ->
         {
@@ -339,20 +387,23 @@ defmodule Calcinator.Resources.Page do
             ]
           }
         }
+
       {integer, ""} ->
         {:ok, integer}
+
       {integer, remainder_of_binary} ->
         {
           :error,
           %Document{
             errors: [
               %Error{
-                detail: "`#{pointer}` contains quoted integer (`#{integer}`), " <>
-                        "but also excess text (`#{inspect remainder_of_binary}`)",
+                detail:
+                  "`#{pointer}` contains quoted integer (`#{integer}`), " <>
+                    "but also excess text (`#{inspect(remainder_of_binary)}`)",
                 meta: %{
                   excess: remainder_of_binary,
                   integer: integer,
-                  type: "quoted integer",
+                  type: "quoted integer"
                 },
                 source: source,
                 status: "422",
@@ -385,9 +436,40 @@ defmodule Calcinator.Resources.Page do
     {:error, %Document{errors: [Error.type(error_template, "positive integer")]}}
   end
 
-  defp put_defaults(page) do
-    with {:ok, size_env} <- env()
-                            |> Keyword.fetch(:size),
+  defp put_maximum(child_options = %{field: field}, env) do
+    case field do
+      :number ->
+        child_options
+
+      :size ->
+        with {:ok, size_env} <- Keyword.fetch(env, :size),
+             {:ok, maximum} <- Keyword.fetch(size_env, :maximum) do
+          update_in(child_options.member.from_json, fn from_json ->
+            fn json, error_template ->
+              with {:ok, size} when size > maximum <- from_json.(json, error_template) do
+                {:error,
+                 %Document{
+                   errors: [
+                     %Error{
+                       error_template
+                       | detail: "Page size (#{size}) is greater than the maximum (#{maximum}).",
+                         meta: %{"maximum" => maximum},
+                         status: "422",
+                         title: "Exceeds Maximum"
+                     }
+                   ]
+                 }}
+              end
+            end
+          end)
+        else
+          _ -> child_options
+        end
+    end
+  end
+
+  defp put_defaults(page, env) do
+    with {:ok, size_env} <- Keyword.fetch(env, :size),
          {:ok, default} <- Keyword.fetch(size_env, :default) do
       page
       |> Map.put_new("number", 1)
