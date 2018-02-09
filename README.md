@@ -54,6 +54,24 @@ In addition to pagination in `page`, `Calcinator.Resources.query_options` suppor
 (after being converted using `%Calcinator{}` `associations_by_include`), `filters` for JSONAPI filters that are passed
 through directly, and `sorts` for JSONAPI sort.
 
+#### Page Size
+
+##### Default
+
+A default page size can be configured.
+
+```elixir
+config :calcinator, Calcinator.Resources.Page, size: [default: 5]
+```
+
+or at runtime using `Application.put_env/3`
+
+```elixir
+Application.put_env(:calcinator, Calcinator.Resources.Page, size: [default: 10])
+```
+
+When default page size is configured, a default page number of `1` is also assumed.
+
 #### `Calcinator.Resources.Ecto.Repo`
 
 Pagination for `Calcinator.Resources.Ecto.Repo` is opt-in and needs to be configured.

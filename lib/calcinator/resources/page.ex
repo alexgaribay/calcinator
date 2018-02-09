@@ -55,40 +55,6 @@ defmodule Calcinator.Resources.Page do
   @doc """
   Parses `t` out of `params`
 
-  ## No pagination
-
-  If there is no `"page"` key, then there is no pagination.
-
-      iex> Calcinator.Resources.Page.from_params(%{})
-      {:ok, nil}
-
-  ## Pagination
-
-  If there is a "page" key with `"number"` and `"size"` children, then there is pagination.
-
-      iex> Calcinator.Resources.Page.from_params(
-      ...>   %{
-      ...>     "page" => %{
-      ...>       "number" => 1,
-      ...>       "size" => 2
-      ...>     }
-      ...>   }
-      ...> )
-      {:ok, %Calcinator.Resources.Page{number: 1, size: 2}}
-
-  In addition to be decoded JSON, the params can also be the raw `%{String.t => String.t}` and the quoted integers will
-  be decoded.
-
-      iex> Calcinator.Resources.Page.from_params(
-      ...>   %{
-      ...>     "page" => %{
-      ...>       "number" => "1",
-      ...>       "size" => "2"
-      ...>     }
-      ...>   }
-      ...> )
-      {:ok, %Calcinator.Resources.Page{number: 1, size: 2}}
-
   ## Errors
 
   A page number can't be given as the `"page"` parameter alone because no default page size is assumed.
@@ -108,64 +74,6 @@ defmodule Calcinator.Resources.Page do
               },
               status: "422",
               title: "Type is wrong"
-            }
-          ]
-        }
-      }
-
-  ### Required parameters
-
-  Likewise, the `"page"` map can't have only a `"number"` parameter because no default page size is assumed.
-
-      iex> Calcinator.Resources.Page.from_params(
-      ...>   %{
-      ...>     "page" => %{
-      ...>       "number" => 1
-      ...>     }
-      ...>   }
-      ...> )
-      {
-        :error,
-        %Alembic.Document{
-          errors: [
-            %Alembic.Error{
-              detail: "`/page/size` is missing",
-              meta: %{
-                "child" => "size"
-              },
-              source: %Alembic.Source{
-                pointer: "/page"
-              },
-              status: "422",
-              title: "Child missing"
-            }
-          ]
-        }
-      }
-
-  The page number is not assumed to be 1 when not given.
-
-      iex> Calcinator.Resources.Page.from_params(
-      ...>   %{
-      ...>     "page" => %{
-      ...>       "size" => 10
-      ...>     }
-      ...>   }
-      ...> )
-      {
-        :error,
-        %Alembic.Document{
-          errors: [
-            %Alembic.Error{
-              detail: "`/page/number` is missing",
-              meta: %{
-                "child" => "number"
-              },
-              source: %Alembic.Source{
-                pointer: "/page"
-              },
-              status: "422",
-              title: "Child missing"
             }
           ]
         }
@@ -233,25 +141,153 @@ defmodule Calcinator.Resources.Page do
         }
       }
 
+  ## With default page size
+
+  A default page size can be configured.
+
+      config :calcinator, Calcinator.Resources.Page, size: [default: 5]
+
+  or at runtime using `Application.put_env/3`
+
+      Application.put_env(:calcinator, Calcinator.Resources.Page, size: [default: 10])
+
+  If there is no `"page"` key, then there is pagination using the default page size and the default number, 1.
+
+      iex> Application.put_env(:calcinator, Calcinator.Resources.Page, size: [default: 15])
+      iex> Calcinator.Resources.Page.from_params(%{})
+      {:ok, %Calcinator.Resources.Page{number: 1, size: 15}}
+
+  If there is a `"page"` key with a `"size"` child, but not a `"number" child, then the first page is assumed
+
+      iex> Application.put_env(:calcinator, Calcinator.Resources.Page, size: [default: 20])
+      iex> Calcinator.Resources.Page.from_params(%{"page" => %{"size" => 10}})
+      {:ok, %Calcinator.Resources.Page{number: 1, size: 10}}
+
+  If there is a `"page"` key with a `"number"` child, but not a `"size" child, then the number page is used with the
+  default page size
+
+      iex> Application.put_env(:calcinator, Calcinator.Resources.Page, size: [default: 25])
+      iex> Calcinator.Resources.Page.from_params(%{"page" => %{"number" => 2}})
+      {:ok, %Calcinator.Resources.Page{number: 2, size: 25}}
+
+
+  If there is a `"page"` key with both a `"number"` and `"size"` children, then the defaults are ignored and the number
+  and size are used
+
+      iex> Application.put_env(:calcinator, Calcinator.Resources.Page, size: [default: 30])
+      iex> Calcinator.Resources.Page.from_params(%{"page" => %{"number" => 2, "size" => 10}})
+      {:ok, %Calcinator.Resources.Page{number: 2, size: 10}}
+
+  ## Without default page size
+
+  If there is no `"page"` key, then there is no pagination.
+
+      iex> Calcinator.Resources.Page.from_params(%{})
+      {:ok, nil}
+
+  ### Pagination
+
+  If there is a "page" key with `"number"` and `"size"` children, then there is pagination.
+
+      iex> Calcinator.Resources.Page.from_params(
+      ...>   %{
+      ...>     "page" => %{
+      ...>       "number" => 1,
+      ...>       "size" => 2
+      ...>     }
+      ...>   }
+      ...> )
+      {:ok, %Calcinator.Resources.Page{number: 1, size: 2}}
+
+  In addition to be decoded JSON, the params can also be the raw `%{String.t => String.t}` and the quoted integers will
+  be decoded.
+
+      iex> Calcinator.Resources.Page.from_params(
+      ...>   %{
+      ...>     "page" => %{
+      ...>       "number" => "1",
+      ...>       "size" => "2"
+      ...>     }
+      ...>   }
+      ...> )
+      {:ok, %Calcinator.Resources.Page{number: 1, size: 2}}
+
+  ### Required parameters
+
+  Likewise, the `"page"` map can't have only a `"number"` parameter because no default page size is assumed.
+
+      iex> Calcinator.Resources.Page.from_params(
+      ...>   %{
+      ...>     "page" => %{
+      ...>       "number" => 1
+      ...>     }
+      ...>   }
+      ...> )
+      {
+        :error,
+        %Alembic.Document{
+          errors: [
+            %Alembic.Error{
+              detail: "`/page/size` is missing",
+              meta: %{
+                "child" => "size"
+              },
+              source: %Alembic.Source{
+                pointer: "/page"
+              },
+              status: "422",
+              title: "Child missing"
+            }
+          ]
+        }
+      }
+
+  The page number is not assumed to be 1 when not given.
+
+      iex> Calcinator.Resources.Page.from_params(
+      ...>   %{
+      ...>     "page" => %{
+      ...>       "size" => 10
+      ...>     }
+      ...>   }
+      ...> )
+      {
+        :error,
+        %Alembic.Document{
+          errors: [
+            %Alembic.Error{
+              detail: "`/page/number` is missing",
+              meta: %{
+                "child" => "number"
+              },
+              source: %Alembic.Source{
+                pointer: "/page"
+              },
+              status: "422",
+              title: "Child missing"
+            }
+          ]
+        }
+      }
+
   """
 
   def from_params(%{"page" => page}) when is_map(page) do
-    parent = %{
-      error_template: @error_template,
-      json: page
-    }
-
-    @page_child_options_list
-    |> Stream.map(&Map.put(&1, :parent, parent))
-    |> Stream.map(&FromJson.from_parent_json_to_field_result/1)
-    |> FromJson.reduce({:ok, %__MODULE__{}})
+    from_parent_json(%{error_template: @error_template, json: put_defaults(page)})
   end
 
   def from_params(%{"page" => page}) when not is_map(page) do
     {:error, %Document{errors: [Error.type(@error_template, "object")]}}
   end
 
-  def from_params(params) when is_map(params), do: {:ok, nil}
+  def from_params(params) when is_map(params) do
+    %{}
+    |> put_defaults()
+    |> case do
+         empty when map_size(empty) == 0 -> {:ok, nil}
+         page_params -> from_parent_json(%{error_template: @error_template, json: page_params})
+       end
+  end
 
   def to_params(nil), do: %{}
 
@@ -273,6 +309,17 @@ defmodule Calcinator.Resources.Page do
   end
 
   ## Private Functions
+
+  defp env do
+    Application.get_env(:calcinator, __MODULE__) || []
+  end
+
+  defp from_parent_json(parent) do
+    @page_child_options_list
+    |> Stream.map(&Map.put(&1, :parent, parent))
+    |> Stream.map(&FromJson.from_parent_json_to_field_result/1)
+    |> FromJson.reduce({:ok, %__MODULE__{}})
+  end
 
   defp integer_from_json(
          quoted_integer,
@@ -336,5 +383,17 @@ defmodule Calcinator.Resources.Page do
 
   defp integer_to_positive_integer(integer, error_template) when is_integer(integer) do
     {:error, %Document{errors: [Error.type(error_template, "positive integer")]}}
+  end
+
+  defp put_defaults(page) do
+    with {:ok, size_env} <- env()
+                            |> Keyword.fetch(:size),
+         {:ok, default} <- Keyword.fetch(size_env, :default) do
+      page
+      |> Map.put_new("number", 1)
+      |> Map.put_new("size", default)
+    else
+      :error -> page
+    end
   end
 end
