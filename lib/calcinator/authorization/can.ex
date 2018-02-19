@@ -45,7 +45,9 @@ defmodule Calcinator.Authorization.Can do
   """
   @spec filter_associations_can(struct, Authorization.subject(), Authorization.action(), t) :: struct
   def filter_associations_can(model = %{__struct__: ecto_schema}, subject, action, callback_module) do
-    Enum.reduce(ecto_schema.__schema__(:associations), model, fn association_name, acc ->
+    :associations
+    |> ecto_schema.__schema__()
+    |> Enum.reduce(model, fn association_name, acc ->
       Map.update!(acc, association_name, &filter_association_can(&1, [acc], subject, action, callback_module))
     end)
   end
@@ -136,7 +138,9 @@ defmodule Calcinator.Authorization.Can do
          action,
          callback_module
        ) do
-    Enum.reduce(ecto_schema_module.__schema__(:associations), association_model, fn association_name, acc ->
+    :associations
+    |> ecto_schema_module.__schema__()
+    |> Enum.reduce(association_model, fn association_name, acc ->
       Map.update!(
         acc,
         association_name,

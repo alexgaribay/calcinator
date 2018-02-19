@@ -32,7 +32,9 @@ defmodule Calcinator.Instrumenters do
   @doc false
   @spec compile_start_callbacks([module], term) :: Macro.t()
   def compile_start_callbacks(instrumenters, event) do
-    Enum.map(Enum.with_index(instrumenters), fn {inst, index} ->
+    instrumenters
+    |> Enum.with_index()
+    |> Enum.map(fn {inst, index} ->
       error_prefix = "Instrumenter #{inspect(inst)}.#{event}/3 failed.\n"
 
       quote do
@@ -56,7 +58,9 @@ defmodule Calcinator.Instrumenters do
   @doc false
   @spec compile_stop_callbacks([module], term) :: Macro.t()
   def compile_stop_callbacks(instrumenters, event) do
-    Enum.map(Enum.with_index(instrumenters), fn {inst, index} ->
+    instrumenters
+    |> Enum.with_index()
+    |> Enum.map(fn {inst, index} ->
       error_prefix = "Instrumenter #{inspect(inst)}.#{event}/3 failed.\n"
 
       quote do
@@ -81,12 +85,12 @@ defmodule Calcinator.Instrumenters do
   # modules interested in that event.
   defp events_to_instrumenters(instrumenters) do
     # [Ins1, Ins2, ...]
-    instrumenters
     # [{Ins1, e1}, {Ins2, e1}, ...]
+    # %{e1 => [{Ins1, e1}, ...], ...}
+    # [{e1, [Ins1, Ins2]}, ...]
+    instrumenters
     |> instrumenters_and_events()
-     # %{e1 => [{Ins1, e1}, ...], ...}
     |> Enum.group_by(fn {_inst, e} -> e end)
-     # [{e1, [Ins1, Ins2]}, ...]
     |> Enum.map(fn {e, insts} -> {e, strip_events(insts)} end)
   end
 

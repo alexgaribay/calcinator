@@ -30,9 +30,9 @@ defmodule Mix.Tasks.Calcinator.Ecto.Wait do
 
   @doc false
   def run(args) do
-    repos = parse_repo(args)
-
-    Enum.each(repos, fn repo ->
+    args
+    |> parse_repo()
+    |> Enum.each(fn repo ->
       ensure_repo(repo, args)
 
       ensure_implements(
