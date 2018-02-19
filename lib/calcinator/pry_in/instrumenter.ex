@@ -127,8 +127,6 @@ if Code.ensure_loaded?(PryIn) do
       end
     end
 
-    # def calcinator_view(:stop, _time_diff, metadata), do: (IO.inspect(metadata); :ok)
-
     ## Private Functions
 
     defp add_custom_metric(
