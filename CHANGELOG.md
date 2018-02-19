@@ -116,12 +116,20 @@
                      ]
                    })
     ```
+* [#38](https://github.com/C-S-D/calcinator/pull/38) - [@KronicDeth](https://github.com/KronicDeth)
+  * Update deps
+    * `ex_doc` `0.18.3`
+    * `excoveralls` `0.8.1`
+    * `junit_formatter` `2.2.0`
+    * `postgrex` `0.13.5`
+    * `pryin` `1.5.0`
 
 ### Bug Fixes
 * [#36](https://github.com/C-S-D/calcinator/pull/36) - [@KronicDeth](https://github.com/KronicDeth)
   * Fix Elixir 1.6 GenServer warning about not defining `init/1` explicitly.
 * [#37[(https://github.com/C-S-D/calcinator/pull/37) - `query_options[:page]` is no longer ignored when passed to `use Calcinator.Resources.Ecto.Repo`'s `list/1` by default.  To restore the old behavior change the paginator to `Calcinator.Resources.Ecto.Repo.Pagination.Ignore`. - [@KronicDeth](https://github.com/KronicDeth)
 * [#41](https://github.com/C-S-D/calcinator/pull/41) - add missing `alias Calcinator.Resources.Sorts` to `Calcinator.Resources` to fix `Sorts.t` being unknown - [@KronicDeth](https://github.com/KronicDeth)
+* [#38](https://github.com/C-S-D/calcinator/pull/38) - Remove `scrivener_ecto` as [#37](https://github.com/C-S-D/calcinator/pull/37) ended up not using `scrivener` and instead using `Ecto` directly. - [@KronicDeth](https://github.com/KronicDeth)
 
 ## v5.0.0
 
