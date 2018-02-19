@@ -42,7 +42,7 @@ defmodule Calcinator.Mixfile do
 
   defp aliases do
     [
-      compile: "compile --warnings-as-errors",
+      compile: "compile --ignore-module-conflict --warnings-as-errors",
       test: ["calcinator.ecto.wait", "ecto.drop", "ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
