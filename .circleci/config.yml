@@ -3,7 +3,7 @@
 job_defaults: &job_defaults
   working_directory: ~/calcinator
   docker:
-    - image: circleci/elixir:1.5.1
+    - image: circleci/elixir:1.6.1
       environment:
         MIX_ENV: test
 
@@ -179,6 +179,18 @@ jobs:
           command: |
             mix docs 2>&1 | tee mix-docs.txt
             if grep "Closing unclosed backquotes" mix-docs.txt; then exit 1; fi
+  format:
+    <<: *job_defaults
+    steps:
+      - *mix_local_hex
+      - *mix_local_rebar
+
+      - attach_workspace:
+          at: /home/circleci/calcinator
+
+      # Only check if formatted.  Commit authors are responsible for running `mix format` on each commit to maintain
+      # formatting.
+      - run: mix format --check-formatted
   inch:
     <<: *job_defaults
     steps:
