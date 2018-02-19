@@ -17,9 +17,10 @@ defmodule Calcinator.ControllerTest do
   setup do
     Application.put_env(:calcinator, TestAuthors, [])
 
-    conn = build_conn()
-           |> put_req_header("accept", "application/vnd.api+json")
-           |> put_req_header("content-type", "application/vnd.api+json")
+    conn =
+      build_conn()
+      |> put_req_header("accept", "application/vnd.api+json")
+      |> put_req_header("content-type", "application/vnd.api+json")
 
     [conn: conn]
   end
@@ -37,49 +38,50 @@ defmodule Calcinator.ControllerTest do
       second_test_tag = %TestTag{id: second_tag_id} = Factory.insert(:test_tag)
       body = "First Post!"
 
-      conn = Calcinator.Controller.create(
-        conn,
-        %{
-          "meta" => meta,
-          "data" => %{
-            "type" => "test-posts",
-            "attributes" => %{
-              "body" => body
-            },
-            "relationships" => %{
-              "author" => %{
-                "data" => %{
-                  "type" => "test-authors",
-                  "id" => to_string(author_id)
-                }
+      conn =
+        Calcinator.Controller.create(
+          conn,
+          %{
+            "meta" => meta,
+            "data" => %{
+              "type" => "test-posts",
+              "attributes" => %{
+                "body" => body
               },
-              # Tests `many_to_many` support for create
-              "tags" => %{
-                "data" => [
-                  %{
-                    "type" => "test-tags",
-                    "id" => to_string(first_tag_id)
-                  },
-                  %{
-                    "type" => "test-tags",
-                    "id" => to_string(second_tag_id)
+              "relationships" => %{
+                "author" => %{
+                  "data" => %{
+                    "type" => "test-authors",
+                    "id" => to_string(author_id)
                   }
-                ]
+                },
+                # Tests `many_to_many` support for create
+                "tags" => %{
+                  "data" => [
+                    %{
+                      "type" => "test-tags",
+                      "id" => to_string(first_tag_id)
+                    },
+                    %{
+                      "type" => "test-tags",
+                      "id" => to_string(second_tag_id)
+                    }
+                  ]
+                }
               }
-            }
+            },
+            "include" => "author,tags"
           },
-          "include" => "author,tags"
-        },
-        %Calcinator{
-          associations_by_include: %{
-            "author" => :author,
-            "tags" => :tags
-          },
-          ecto_schema_module: TestPost,
-          resources_module: TestPosts,
-          view_module: TestPostView
-        }
-      )
+          %Calcinator{
+            associations_by_include: %{
+              "author" => :author,
+              "tags" => :tags
+            },
+            ecto_schema_module: TestPost,
+            resources_module: TestPosts,
+            view_module: TestPostView
+          }
+        )
 
       assert %{
                "data" => %{
@@ -109,55 +111,56 @@ defmodule Calcinator.ControllerTest do
       %TestTag{id: second_tag_id} = Factory.insert(:test_tag)
       body = "First Post!"
 
-      conn = Calcinator.Controller.create(
-        conn,
-        %{
-          "fields" => %{
-            # sparse primary to prove it works on create
-            "test-posts" => "",
-            # sparse only 1 of the included to show sparsing included works, but type targeting works
-            "test-tags" => ""
-          },
-          "meta" => meta,
-          "data" => %{
-            "type" => "test-posts",
-            "attributes" => %{
-              "body" => body
+      conn =
+        Calcinator.Controller.create(
+          conn,
+          %{
+            "fields" => %{
+              # sparse primary to prove it works on create
+              "test-posts" => "",
+              # sparse only 1 of the included to show sparsing included works, but type targeting works
+              "test-tags" => ""
             },
-            "relationships" => %{
-              "author" => %{
-                "data" => %{
-                  "type" => "test-authors",
-                  "id" => to_string(author_id)
-                }
+            "meta" => meta,
+            "data" => %{
+              "type" => "test-posts",
+              "attributes" => %{
+                "body" => body
               },
-              # Tests `many_to_many` support for create
-              "tags" => %{
-                "data" => [
-                  %{
-                    "type" => "test-tags",
-                    "id" => to_string(first_tag_id)
-                  },
-                  %{
-                    "type" => "test-tags",
-                    "id" => to_string(second_tag_id)
+              "relationships" => %{
+                "author" => %{
+                  "data" => %{
+                    "type" => "test-authors",
+                    "id" => to_string(author_id)
                   }
-                ]
+                },
+                # Tests `many_to_many` support for create
+                "tags" => %{
+                  "data" => [
+                    %{
+                      "type" => "test-tags",
+                      "id" => to_string(first_tag_id)
+                    },
+                    %{
+                      "type" => "test-tags",
+                      "id" => to_string(second_tag_id)
+                    }
+                  ]
+                }
               }
-            }
+            },
+            "include" => "author,tags"
           },
-          "include" => "author,tags"
-        },
-        %Calcinator{
-          associations_by_include: %{
-            "author" => :author,
-            "tags" => :tags
-          },
-          ecto_schema_module: TestPost,
-          resources_module: TestPosts,
-          view_module: TestPostView
-        }
-      )
+          %Calcinator{
+            associations_by_include: %{
+              "author" => :author,
+              "tags" => :tags
+            },
+            ecto_schema_module: TestPost,
+            resources_module: TestPosts,
+            view_module: TestPostView
+          }
+        )
 
       assert %{
                "data" => %{
@@ -186,96 +189,101 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       Ecto.Adapters.SQL.Sandbox.checkin(Repo)
 
-      conn = Calcinator.Controller.create(
-        conn,
-        %{
-          "data" => %{
-            "type" => "test-authors",
-            "attributes" => %{
-              "name" => "Alice"
-            }
+      conn =
+        Calcinator.Controller.create(
+          conn,
+          %{
+            "data" => %{
+              "type" => "test-authors",
+              "attributes" => %{
+                "name" => "Alice"
+              }
+            },
+            "meta" => meta
           },
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_sandox_access_disallowed(conn)
     end
 
     test "{:error, :sandbox_token_missing}", %{conn: conn} do
-      conn = Calcinator.Controller.create(
-        conn,
-        %{
-          "data" => %{
-            "type" => "test-authors",
-            "attributes" => %{
-              "name" => "Alice"
+      conn =
+        Calcinator.Controller.create(
+          conn,
+          %{
+            "data" => %{
+              "type" => "test-authors",
+              "attributes" => %{
+                "name" => "Alice"
+              }
             }
-          }
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_sandbox_token_missing(conn)
     end
 
     test "{:error, :timeout}", %{conn: conn} do
-      Application.put_env(:calcinator, TestAuthors, [insert: {:error, :timeout}])
+      Application.put_env(:calcinator, TestAuthors, insert: {:error, :timeout})
 
-      conn = Calcinator.Controller.create(
-        conn,
-        %{
-          "data" => %{
-            "type" => "test-authors",
-            "attributes" => %{
-              "name" => "Alice"
-            }
+      conn =
+        Calcinator.Controller.create(
+          conn,
+          %{
+            "data" => %{
+              "type" => "test-authors",
+              "attributes" => %{
+                "name" => "Alice"
+              }
+            },
+            "meta" => checkout_meta()
           },
-          "meta" => checkout_meta()
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_timeout(conn)
     end
 
     test "{:error, :unauthorized}", %{conn: conn} do
-      conn = Calcinator.Controller.create(
-        conn,
-        %{
-          "data" => %{
-            "type" => "test-authors",
-            "attributes" => %{
-              "name" => "Alice"
-            }
+      conn =
+        Calcinator.Controller.create(
+          conn,
+          %{
+            "data" => %{
+              "type" => "test-authors",
+              "attributes" => %{
+                "name" => "Alice"
+              }
+            },
+            "meta" => checkout_meta()
           },
-          "meta" => checkout_meta()
-        },
-        %Calcinator{
-          authorization_module: Cant,
-          ecto_schema_module: TestAuthor,
-          resources_module: TestAuthors,
-          view_module: TestAuthorView
-        }
-      )
+          %Calcinator{
+            authorization_module: Cant,
+            ecto_schema_module: TestAuthor,
+            resources_module: TestAuthors,
+            view_module: TestAuthorView
+          }
+        )
 
       assert_unauthorized(conn)
     end
 
     test "{:error, Alembic.Document.t}", %{conn: conn} do
-      conn = Calcinator.Controller.create(
-        conn,
-        %{
-          "data" => %{
+      conn =
+        Calcinator.Controller.create(
+          conn,
+          %{
+            "data" => %{},
+            "meta" => checkout_meta()
           },
-          "meta" => checkout_meta(),
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
       assert length(errors) == 2
+
       assert %{
                "detail" => "`/data/type` is missing",
                "meta" => %{
@@ -287,6 +295,7 @@ defmodule Calcinator.ControllerTest do
                "status" => "422",
                "title" => "Child missing"
              } in errors
+
       assert %{
                "detail" => "`/data/id` is missing",
                "meta" => %{
@@ -301,20 +310,22 @@ defmodule Calcinator.ControllerTest do
     end
 
     test "{:error, Ecto.Changeset.t}", %{conn: conn} do
-      conn = Calcinator.Controller.create(
-        conn,
-        %{
-          "data" => %{
-            "type" => "test-authors",
-            "attributes" => %{}
+      conn =
+        Calcinator.Controller.create(
+          conn,
+          %{
+            "data" => %{
+              "type" => "test-authors",
+              "attributes" => %{}
+            },
+            "meta" => checkout_meta()
           },
-          "meta" => checkout_meta()
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
       assert length(errors) == 1
+
       assert %{
                "detail" => "name can't be blank",
                "source" => %{
@@ -330,50 +341,52 @@ defmodule Calcinator.ControllerTest do
       %TestAuthor{id: author_id} = Factory.insert(:test_author)
       body = "First Post!"
 
-      conn = Calcinator.Controller.create(
-        conn,
-        %{
-          "meta" => meta,
-          "data" => %{
-            "type" => "test-posts",
-            "attributes" => %{
-              "body" => body
-            },
-            "relationships" => %{
-              "author" => %{
-                "data" => %{
-                  "type" => "test-authors",
-                  "id" => to_string(author_id)
-                }
+      conn =
+        Calcinator.Controller.create(
+          conn,
+          %{
+            "meta" => meta,
+            "data" => %{
+              "type" => "test-posts",
+              "attributes" => %{
+                "body" => body
               },
-              # Tests `many_to_many` support for create
-              "tags" => %{
-                "data" => [
-                  %{
-                    "type" => "test-tags",
-                    "id" => to_string(-1)
+              "relationships" => %{
+                "author" => %{
+                  "data" => %{
+                    "type" => "test-authors",
+                    "id" => to_string(author_id)
                   }
-                ]
+                },
+                # Tests `many_to_many` support for create
+                "tags" => %{
+                  "data" => [
+                    %{
+                      "type" => "test-tags",
+                      "id" => to_string(-1)
+                    }
+                  ]
+                }
               }
-            }
+            },
+            "include" => "author,tags"
           },
-          "include" => "author,tags"
-        },
-        %Calcinator{
-          associations_by_include: %{
-            "author" => :author,
-            "tags" => :tags
-          },
-          ecto_schema_module: TestPost,
-          resources_module: TestPosts,
-          view_module: TestPostView
-        }
-      )
+          %Calcinator{
+            associations_by_include: %{
+              "author" => :author,
+              "tags" => :tags
+            },
+            ecto_schema_module: TestPost,
+            resources_module: TestPosts,
+            view_module: TestPostView
+          }
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
 
       assert is_list(errors)
       assert length(errors) == 1
+
       assert %{
                "detail" => "tags has element at index 0 whose id (-1) does not exist",
                "source" => %{
@@ -389,27 +402,29 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.delete(
-        conn,
-        %{
-          "id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.delete(
+          conn,
+          %{
+            "id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert response(conn, :no_content) == ""
     end
 
     test "{:error, {:not_found, _}}", %{conn: conn} do
-      conn = Calcinator.Controller.delete(
-        conn,
-        %{
-          "id" => -1,
-          "meta" => checkout_meta()
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.delete(
+          conn,
+          %{
+            "id" => -1,
+            "meta" => checkout_meta()
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_not_found(conn, "id")
     end
@@ -419,14 +434,15 @@ defmodule Calcinator.ControllerTest do
       %TestAuthor{id: id} = Factory.insert(:test_author)
       Ecto.Adapters.SQL.Sandbox.checkin(Repo)
 
-      conn = Calcinator.Controller.delete(
-        conn,
-        %{
-          "id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.delete(
+          conn,
+          %{
+            "id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_sandox_access_disallowed(conn)
     end
@@ -435,49 +451,52 @@ defmodule Calcinator.ControllerTest do
       :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.delete(
-        conn,
-        %{
-          "id" => id
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.delete(
+          conn,
+          %{
+            "id" => id
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_sandbox_token_missing(conn)
     end
 
     test "{:error, :timeout} from Calcinator.Resources.get/2", %{conn: conn} do
-      Application.put_env(:calcinator, TestAuthors, [get: {:error, :timeout}])
+      Application.put_env(:calcinator, TestAuthors, get: {:error, :timeout})
 
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.delete(
-        conn,
-        %{
-          "id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.delete(
+          conn,
+          %{
+            "id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_timeout(conn)
     end
 
     test "{:error, :timeout} from Calcinator.Resources.delete/1", %{conn: conn} do
-      Application.put_env(:calcinator, TestAuthors, [delete: {:error, :timeout}])
+      Application.put_env(:calcinator, TestAuthors, delete: {:error, :timeout})
 
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.delete(
-        conn,
-        %{
-          "id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.delete(
+          conn,
+          %{
+            "id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_timeout(conn)
     end
@@ -486,19 +505,20 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.delete(
-        conn,
-        %{
-          "id" => id,
-          "meta" => meta
-        },
-        %Calcinator{
-          authorization_module: Cant,
-          ecto_schema_module: TestAuthor,
-          resources_module: TestAuthors,
-          view_module: TestAuthorView
-        }
-      )
+      conn =
+        Calcinator.Controller.delete(
+          conn,
+          %{
+            "id" => id,
+            "meta" => meta
+          },
+          %Calcinator{
+            authorization_module: Cant,
+            ecto_schema_module: TestAuthor,
+            resources_module: TestAuthors,
+            view_module: TestAuthorView
+          }
+        )
 
       assert_unauthorized(conn)
     end
@@ -507,18 +527,20 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.delete(
-        conn,
-        %{
-          "id" => id,
-          "include" => "post",
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.delete(
+          conn,
+          %{
+            "id" => id,
+            "include" => "post",
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
       assert length(errors) == 1
+
       assert %{
                "detail" => "`post` is an unknown relationship path",
                "meta" => %{
@@ -536,17 +558,19 @@ defmodule Calcinator.ControllerTest do
       author = %TestAuthor{id: id} = Factory.insert(:test_author)
       Factory.insert(:test_post, author: author)
 
-      conn = Calcinator.Controller.delete(
-        conn,
-        %{
-          "id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.delete(
+          conn,
+          %{
+            "id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
       assert length(errors) == 1
+
       assert %{
                "detail" => "posts are still associated with this entry",
                "source" => %{
@@ -560,7 +584,7 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      assert_error_reason :delete, fn ->
+      assert_error_reason(:delete, fn ->
         Calcinator.Controller.delete(
           conn,
           %{
@@ -569,7 +593,7 @@ defmodule Calcinator.ControllerTest do
           },
           %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
         )
-      end
+      end)
     end
   end
 
@@ -583,14 +607,15 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.get_related_resource(
-        conn,
-        %{
-          "post_id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
-      )
+      conn =
+        Calcinator.Controller.get_related_resource(
+          conn,
+          %{
+            "post_id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
+        )
 
       assert json_response(conn, :ok) ==
                %{
@@ -622,16 +647,17 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.get_related_resource(
-        conn,
-        %{
-          "post_id" => id,
-          # turn off all attributes since there's only one
-          "fields" => %{"test-authors" => ""},
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
-      )
+      conn =
+        Calcinator.Controller.get_related_resource(
+          conn,
+          %{
+            "post_id" => id,
+            # turn off all attributes since there's only one
+            "fields" => %{"test-authors" => ""},
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
+        )
 
       assert json_response(conn, :ok) ==
                %{
@@ -654,30 +680,34 @@ defmodule Calcinator.ControllerTest do
 
     test "{:ok, rendered} for has_many", %{conn: conn} do
       meta = checkout_meta()
-      post = %TestPost{
-        author: %TestAuthor{
-          id: author_id
-        }
-      } = Factory.insert(:test_post)
+
+      post =
+        %TestPost{
+          author: %TestAuthor{
+            id: author_id
+          }
+        } = Factory.insert(:test_post)
 
       # done by route.ex definition of route
       conn = Conn.assign(conn, :related, %{view_module: TestPostView})
       conn = Conn.assign(conn, :source, %{association: :posts, id_key: "author_id"})
 
       # route like `/authors/:author_id/posts`
-      conn = Calcinator.Controller.get_related_resource(
-        conn,
-        %{
-          "author_id" => author_id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.get_related_resource(
+          conn,
+          %{
+            "author_id" => author_id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"data" => data, "links" => links} = json_response(conn, :ok)
 
       assert is_list(data)
       assert length(data) == 1
+
       assert %{
                "type" => "test-posts",
                "id" => to_string(post.id),
@@ -697,31 +727,35 @@ defmodule Calcinator.ControllerTest do
 
     test "{:ok, rendered} for has_many with sparse fieldsets", %{conn: conn} do
       meta = checkout_meta()
-      post = %TestPost{
-        author: %TestAuthor{
-          id: author_id
-        }
-      } = Factory.insert(:test_post)
+
+      post =
+        %TestPost{
+          author: %TestAuthor{
+            id: author_id
+          }
+        } = Factory.insert(:test_post)
 
       # done by route.ex definition of route
       conn = Conn.assign(conn, :related, %{view_module: TestPostView})
       conn = Conn.assign(conn, :source, %{association: :posts, id_key: "author_id"})
 
       # route like `/authors/:author_id/posts`
-      conn = Calcinator.Controller.get_related_resource(
-        conn,
-        %{
-          "author_id" => author_id,
-          "fields" => %{"test-posts" => ""},
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.get_related_resource(
+          conn,
+          %{
+            "author_id" => author_id,
+            "fields" => %{"test-posts" => ""},
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"data" => data, "links" => links} = json_response(conn, :ok)
 
       assert is_list(data)
       assert length(data) == 1
+
       assert %{
                "type" => "test-posts",
                "id" => to_string(post.id),
@@ -745,14 +779,15 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.get_related_resource(
-        conn,
-        %{
-          "post_id" => -1,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
-      )
+      conn =
+        Calcinator.Controller.get_related_resource(
+          conn,
+          %{
+            "post_id" => -1,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
+        )
 
       assert_not_found(conn, "post_id")
     end
@@ -767,14 +802,15 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.get_related_resource(
-        conn,
-        %{
-          "post_id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
-      )
+      conn =
+        Calcinator.Controller.get_related_resource(
+          conn,
+          %{
+            "post_id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
+        )
 
       assert_sandox_access_disallowed(conn)
     end
@@ -788,21 +824,23 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.get_related_resource(
-        conn,
-        %{
-          "post_id" => id
-        },
-        %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
-      )
+      conn =
+        Calcinator.Controller.get_related_resource(
+          conn,
+          %{
+            "post_id" => id
+          },
+          %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
+        )
 
       assert_sandbox_token_missing(conn)
     end
 
     test "{:error, :timeout}", %{conn: conn} do
-      Application.put_env(:calcinator, TestAuthors, [get: {:error, :timeout}])
+      Application.put_env(:calcinator, TestAuthors, get: {:error, :timeout})
 
       meta = checkout_meta()
+
       %TestPost{
         author: %TestAuthor{
           id: author_id
@@ -814,14 +852,15 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :posts, id_key: "author_id"})
 
       # route like `/authors/:author_id/posts`
-      conn = Calcinator.Controller.get_related_resource(
-        conn,
-        %{
-          "author_id" => author_id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.get_related_resource(
+          conn,
+          %{
+            "author_id" => author_id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_timeout(conn)
     end
@@ -835,25 +874,27 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.get_related_resource(
-        conn,
-        %{
-          "post_id" => id,
-          "meta" => meta
-        },
-        %Calcinator{
-          authorization_module: Cant,
-          ecto_schema_module: TestPost,
-          resources_module: TestPosts,
-          view_module: TestPostView
-        }
-      )
+      conn =
+        Calcinator.Controller.get_related_resource(
+          conn,
+          %{
+            "post_id" => id,
+            "meta" => meta
+          },
+          %Calcinator{
+            authorization_module: Cant,
+            ecto_schema_module: TestPost,
+            resources_module: TestPosts,
+            view_module: TestPostView
+          }
+        )
 
       assert_unauthorized(conn)
     end
 
     test "{:error, reason}", %{conn: conn} do
       meta = checkout_meta()
+
       %TestPost{
         author: %TestAuthor{
           id: author_id
@@ -864,7 +905,7 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :related, %{view_module: TestPostView})
       conn = Conn.assign(conn, :source, %{association: :posts, id_key: "author_id"})
 
-      assert_error_reason :get, fn ->
+      assert_error_reason(:get, fn ->
         Calcinator.Controller.get_related_resource(
           conn,
           %{
@@ -873,7 +914,7 @@ defmodule Calcinator.ControllerTest do
           },
           %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
         )
-      end
+      end)
     end
   end
 
@@ -883,36 +924,38 @@ defmodule Calcinator.ControllerTest do
       count = 2
       test_authors = Factory.insert_list(count, :test_author)
 
-      conn = Calcinator.Controller.index(
-        conn,
-        %{
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.index(
+          conn,
+          %{
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"data" => data} = json_response(conn, :ok)
       assert is_list(data)
       assert length(data) == count
 
-      Enum.each test_authors, fn test_author ->
+      Enum.each(test_authors, fn test_author ->
         assert test_author_resource(test_author) in data
-      end
+      end)
     end
 
     test "{:ok, rendered} with sparse fieldset", %{conn: conn} do
       meta = checkout_meta()
       Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.index(
-        conn,
-        %{
-          # turn off all attributes since there's only one
-          "fields" => %{"test-authors" => ""},
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.index(
+          conn,
+          %{
+            # turn off all attributes since there's only one
+            "fields" => %{"test-authors" => ""},
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"data" => [%{"attributes" => attributes}]} = json_response(conn, :ok)
       assert map_size(attributes) == 0
@@ -924,13 +967,14 @@ defmodule Calcinator.ControllerTest do
       Factory.insert_list(count, :test_author)
       Ecto.Adapters.SQL.Sandbox.checkin(Repo)
 
-      conn = Calcinator.Controller.index(
-        conn,
-        %{
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.index(
+          conn,
+          %{
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_sandox_access_disallowed(conn)
     end
@@ -940,28 +984,30 @@ defmodule Calcinator.ControllerTest do
       count = 2
       Factory.insert_list(count, :test_author)
 
-      conn = Calcinator.Controller.index(
-        conn,
-        %{},
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.index(conn, %{}, %Calcinator{
+          ecto_schema_module: TestAuthor,
+          resources_module: TestAuthors,
+          view_module: TestAuthorView
+        })
 
       assert_sandbox_token_missing(conn)
     end
 
     test "{:error, :timeout}", %{conn: conn} do
-      Application.put_env(:calcinator, TestAuthors, [list: {:error, :timeout}])
+      Application.put_env(:calcinator, TestAuthors, list: {:error, :timeout})
       meta = checkout_meta()
       count = 2
       Factory.insert_list(count, :test_author)
 
-      conn = Calcinator.Controller.index(
-        conn,
-        %{
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.index(
+          conn,
+          %{
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_timeout(conn)
     end
@@ -971,18 +1017,19 @@ defmodule Calcinator.ControllerTest do
       count = 2
       Factory.insert_list(count, :test_author)
 
-      conn = Calcinator.Controller.index(
-        conn,
-        %{
-          "meta" => meta
-        },
-        %Calcinator{
-          authorization_module: Cant,
-          ecto_schema_module: TestAuthor,
-          resources_module: TestAuthors,
-          view_module: TestAuthorView
-        }
-      )
+      conn =
+        Calcinator.Controller.index(
+          conn,
+          %{
+            "meta" => meta
+          },
+          %Calcinator{
+            authorization_module: Cant,
+            ecto_schema_module: TestAuthor,
+            resources_module: TestAuthors,
+            view_module: TestAuthorView
+          }
+        )
 
       assert_unauthorized(conn)
     end
@@ -992,17 +1039,19 @@ defmodule Calcinator.ControllerTest do
       count = 2
       Factory.insert_list(count, :test_author)
 
-      conn = Calcinator.Controller.index(
-        conn,
-        %{
-          "include" => "post",
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.index(
+          conn,
+          %{
+            "include" => "post",
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
       assert length(errors) == 1
+
       assert %{
                "detail" => "`post` is an unknown relationship path",
                "meta" => %{
@@ -1021,14 +1070,15 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       test_author = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.show(
-        conn,
-        %{
-          "id" => test_author.id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.show(
+          conn,
+          %{
+            "id" => test_author.id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"data" => data} = json_response(conn, :ok)
       assert data == test_author_resource(test_author)
@@ -1038,16 +1088,17 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       test_author = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.show(
-        conn,
-        %{
-          # turn off all attributes since there's only one
-          "fields" => %{"test-authors" => ""},
-          "id" => test_author.id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.show(
+          conn,
+          %{
+            # turn off all attributes since there's only one
+            "fields" => %{"test-authors" => ""},
+            "id" => test_author.id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"data" => %{"attributes" => attributes}} = json_response(conn, :ok)
       assert map_size(attributes) == 0
@@ -1056,14 +1107,15 @@ defmodule Calcinator.ControllerTest do
     test "{:error, {:not_found, _}}", %{conn: conn} do
       meta = checkout_meta()
 
-      conn = Calcinator.Controller.show(
-        conn,
-        %{
-          "id" => -1,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.show(
+          conn,
+          %{
+            "id" => -1,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_not_found(conn, "id")
     end
@@ -1073,14 +1125,15 @@ defmodule Calcinator.ControllerTest do
       %TestAuthor{id: id} = Factory.insert(:test_author)
       Ecto.Adapters.SQL.Sandbox.checkin(Repo)
 
-      conn = Calcinator.Controller.show(
-        conn,
-        %{
-          "id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.show(
+          conn,
+          %{
+            "id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_sandox_access_disallowed(conn)
     end
@@ -1089,30 +1142,32 @@ defmodule Calcinator.ControllerTest do
       :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.show(
-        conn,
-        %{
-          "id" => id
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.show(
+          conn,
+          %{
+            "id" => id
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_sandbox_token_missing(conn)
     end
 
     test "{:error, :timeout}", %{conn: conn} do
-      Application.put_env(:calcinator, TestAuthors, [get: {:error, :timeout}])
+      Application.put_env(:calcinator, TestAuthors, get: {:error, :timeout})
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.show(
-        conn,
-        %{
-          "id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.show(
+          conn,
+          %{
+            "id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_timeout(conn)
     end
@@ -1121,19 +1176,20 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.show(
-        conn,
-        %{
-          "id" => id,
-          "meta" => meta
-        },
-        %Calcinator{
-          authorization_module: Cant,
-          ecto_schema_module: TestAuthor,
-          resources_module: TestAuthors,
-          view_module: TestAuthorView
-        }
-      )
+      conn =
+        Calcinator.Controller.show(
+          conn,
+          %{
+            "id" => id,
+            "meta" => meta
+          },
+          %Calcinator{
+            authorization_module: Cant,
+            ecto_schema_module: TestAuthor,
+            resources_module: TestAuthors,
+            view_module: TestAuthorView
+          }
+        )
 
       assert_unauthorized(conn)
     end
@@ -1142,18 +1198,20 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.show(
-        conn,
-        %{
-          "id" => id,
-          "include" => "post",
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.show(
+          conn,
+          %{
+            "id" => id,
+            "include" => "post",
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
       assert length(errors) == 1
+
       assert %{
                "detail" => "`post` is an unknown relationship path",
                "meta" => %{
@@ -1170,7 +1228,7 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      assert_error_reason :get, fn ->
+      assert_error_reason(:get, fn ->
         Calcinator.Controller.show(
           conn,
           %{
@@ -1179,7 +1237,7 @@ defmodule Calcinator.ControllerTest do
           },
           %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
         )
-      end
+      end)
     end
   end
 
@@ -1193,14 +1251,15 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/relationship/author`
-      conn = Calcinator.Controller.show_relationship(
-        conn,
-        %{
-          "post_id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
-      )
+      conn =
+        Calcinator.Controller.show_relationship(
+          conn,
+          %{
+            "post_id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
+        )
 
       assert json_response(conn, :ok) ==
                %{
@@ -1220,30 +1279,34 @@ defmodule Calcinator.ControllerTest do
 
     test "{:ok, rendered} for has_many", %{conn: conn} do
       meta = checkout_meta()
-      post = %TestPost{
-        author: %TestAuthor{
-          id: author_id
-        }
-      } = Factory.insert(:test_post)
+
+      post =
+        %TestPost{
+          author: %TestAuthor{
+            id: author_id
+          }
+        } = Factory.insert(:test_post)
 
       # done by route.ex definition of route
       conn = Conn.assign(conn, :related, %{view_module: TestPostView})
       conn = Conn.assign(conn, :source, %{association: :posts, id_key: "author_id"})
 
       # route like `/authors/:author_id/posts`
-      conn = Calcinator.Controller.show_relationship(
-        conn,
-        %{
-          "author_id" => author_id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.show_relationship(
+          conn,
+          %{
+            "author_id" => author_id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"data" => data, "links" => links} = json_response(conn, :ok)
 
       assert is_list(data)
       assert length(data) == 1
+
       assert %{
                "type" => "test-posts",
                "id" => to_string(post.id)
@@ -1263,14 +1326,15 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.show_relationship(
-        conn,
-        %{
-          "post_id" => -1,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
-      )
+      conn =
+        Calcinator.Controller.show_relationship(
+          conn,
+          %{
+            "post_id" => -1,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
+        )
 
       assert_not_found(conn, "post_id")
     end
@@ -1285,14 +1349,15 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.show_relationship(
-        conn,
-        %{
-          "post_id" => id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
-      )
+      conn =
+        Calcinator.Controller.show_relationship(
+          conn,
+          %{
+            "post_id" => id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
+        )
 
       assert_sandox_access_disallowed(conn)
     end
@@ -1306,21 +1371,23 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.show_relationship(
-        conn,
-        %{
-          "post_id" => id
-        },
-        %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
-      )
+      conn =
+        Calcinator.Controller.show_relationship(
+          conn,
+          %{
+            "post_id" => id
+          },
+          %Calcinator{ecto_schema_module: TestPost, resources_module: TestPosts, view_module: TestPostView}
+        )
 
       assert_sandbox_token_missing(conn)
     end
 
     test "{:error, :timeout}", %{conn: conn} do
-      Application.put_env(:calcinator, TestAuthors, [get: {:error, :timeout}])
+      Application.put_env(:calcinator, TestAuthors, get: {:error, :timeout})
 
       meta = checkout_meta()
+
       %TestPost{
         author: %TestAuthor{
           id: author_id
@@ -1332,14 +1399,15 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :posts, id_key: "author_id"})
 
       # route like `/authors/:author_id/posts`
-      conn = Calcinator.Controller.show_relationship(
-        conn,
-        %{
-          "author_id" => author_id,
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+      conn =
+        Calcinator.Controller.show_relationship(
+          conn,
+          %{
+            "author_id" => author_id,
+            "meta" => meta
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_timeout(conn)
     end
@@ -1353,25 +1421,27 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :source, %{association: :author, id_key: "post_id"})
 
       # route like `/posts/:post_id/author`
-      conn = Calcinator.Controller.show_relationship(
-        conn,
-        %{
-          "post_id" => id,
-          "meta" => meta
-        },
-        %Calcinator{
-          authorization_module: Cant,
-          ecto_schema_module: TestPost,
-          resources_module: TestPosts,
-          view_module: TestPostView
-        }
-      )
+      conn =
+        Calcinator.Controller.show_relationship(
+          conn,
+          %{
+            "post_id" => id,
+            "meta" => meta
+          },
+          %Calcinator{
+            authorization_module: Cant,
+            ecto_schema_module: TestPost,
+            resources_module: TestPosts,
+            view_module: TestPostView
+          }
+        )
 
       assert_unauthorized(conn)
     end
 
     test "{:error, reason}", %{conn: conn} do
       meta = checkout_meta()
+
       %TestPost{
         author: %TestAuthor{
           id: author_id
@@ -1382,7 +1452,7 @@ defmodule Calcinator.ControllerTest do
       conn = Conn.assign(conn, :related, %{view_module: TestPostView})
       conn = Conn.assign(conn, :source, %{association: :posts, id_key: "author_id"})
 
-      assert_error_reason :get, fn ->
+      assert_error_reason(:get, fn ->
         Calcinator.Controller.show_relationship(
           conn,
           %{
@@ -1391,7 +1461,7 @@ defmodule Calcinator.ControllerTest do
           },
           %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
         )
-      end
+      end)
     end
   end
 
@@ -1403,41 +1473,42 @@ defmodule Calcinator.ControllerTest do
       updated_body = "Updated Body"
       updated_test_tag = Factory.insert(:test_tag)
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => to_string(id),
-          "data" => %{
-            "type" => "test-posts",
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
             "id" => to_string(id),
-            "attributes" => %{
-              "body" => updated_body
-            },
-            # Test `many_to_many` update does replacement
-            "relationships" => %{
-              "tags" => %{
-                "data" => [
-                  %{
-                    "type" => "test-tags",
-                    "id" => to_string(updated_test_tag.id)
-                  }
-                ]
+            "data" => %{
+              "type" => "test-posts",
+              "id" => to_string(id),
+              "attributes" => %{
+                "body" => updated_body
+              },
+              # Test `many_to_many` update does replacement
+              "relationships" => %{
+                "tags" => %{
+                  "data" => [
+                    %{
+                      "type" => "test-tags",
+                      "id" => to_string(updated_test_tag.id)
+                    }
+                  ]
+                }
               }
-            }
+            },
+            "include" => "author,tags",
+            "meta" => meta
           },
-          "include" => "author,tags",
-          "meta" => meta
-        },
-        %Calcinator{
-          associations_by_include: %{
-            "author" => :author,
-            "tags" => :tags
-          },
-          ecto_schema_module: TestPost,
-          resources_module: TestPosts,
-          view_module: TestPostView
-        }
-      )
+          %Calcinator{
+            associations_by_include: %{
+              "author" => :author,
+              "tags" => :tags
+            },
+            ecto_schema_module: TestPost,
+            resources_module: TestPosts,
+            view_module: TestPostView
+          }
+        )
 
       assert %{
                "data" => %{
@@ -1448,6 +1519,7 @@ defmodule Calcinator.ControllerTest do
                },
                "included" => included
              } = json_response(conn, :ok)
+
       assert is_list(included)
 
       included_by_id_by_type = resource_by_id_by_type(included)
@@ -1466,47 +1538,48 @@ defmodule Calcinator.ControllerTest do
       updated_body = "Updated Body"
       updated_test_tag = Factory.insert(:test_tag)
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => to_string(id),
-          "data" => %{
-            "type" => "test-posts",
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
             "id" => to_string(id),
-            "attributes" => %{
-              "body" => updated_body
-            },
-            # Test `many_to_many` update does replacement
-            "relationships" => %{
-              "tags" => %{
-                "data" => [
-                  %{
-                    "type" => "test-tags",
-                    "id" => to_string(updated_test_tag.id)
-                  }
-                ]
+            "data" => %{
+              "type" => "test-posts",
+              "id" => to_string(id),
+              "attributes" => %{
+                "body" => updated_body
+              },
+              # Test `many_to_many` update does replacement
+              "relationships" => %{
+                "tags" => %{
+                  "data" => [
+                    %{
+                      "type" => "test-tags",
+                      "id" => to_string(updated_test_tag.id)
+                    }
+                  ]
+                }
               }
-            }
+            },
+            "fields" => %{
+              # sparse primary
+              "test-posts" => "",
+              # sparse only 1 of the included tos how sparsing is selective
+              "test-authors" => ""
+            },
+            "include" => "author,tags",
+            "meta" => meta
           },
-          "fields" => %{
-            # sparse primary
-            "test-posts" => "",
-            # sparse only 1 of the included tos how sparsing is selective
-            "test-authors" => ""
-          },
-          "include" => "author,tags",
-          "meta" => meta
-        },
-        %Calcinator{
-          associations_by_include: %{
-            "author" => :author,
-            "tags" => :tags
-          },
-          ecto_schema_module: TestPost,
-          resources_module: TestPosts,
-          view_module: TestPostView
-        }
-      )
+          %Calcinator{
+            associations_by_include: %{
+              "author" => :author,
+              "tags" => :tags
+            },
+            ecto_schema_module: TestPost,
+            resources_module: TestPosts,
+            view_module: TestPostView
+          }
+        )
 
       assert %{
                "data" => %{
@@ -1515,6 +1588,7 @@ defmodule Calcinator.ControllerTest do
                },
                "included" => included
              } = json_response(conn, :ok)
+
       assert is_list(included)
 
       included_by_id_by_type = resource_by_id_by_type(included)
@@ -1538,25 +1612,27 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author, name: "Alice")
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => id,
-          "data" => %{
-            "type" => "test-authors",
-            "id" => to_string(id),
-            "attributes" => %{
-              "name" => "Eve"
-            }
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
+            "id" => id,
+            "data" => %{
+              "type" => "test-authors",
+              "id" => to_string(id),
+              "attributes" => %{
+                "name" => "Eve"
+              }
+            },
+            "meta" => meta
           },
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"errors" => errors} = json_response(conn, :bad_gateway)
       assert is_list(errors)
       assert length(errors) == 1
+
       assert %{
                "status" => "502",
                "title" => "Bad Gateway"
@@ -1565,21 +1641,23 @@ defmodule Calcinator.ControllerTest do
 
     test "{:error, {:not_found, _}}", %{conn: conn} do
       id = -1
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => id,
-          "data" => %{
-            "type" => "test-authors",
-            "id" => to_string(id),
-            "attributes" => %{
-              "name" => "Eve"
-            }
+
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
+            "id" => id,
+            "data" => %{
+              "type" => "test-authors",
+              "id" => to_string(id),
+              "attributes" => %{
+                "name" => "Eve"
+              }
+            },
+            "meta" => checkout_meta()
           },
-          "meta" => checkout_meta()
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_not_found(conn, "id")
     end
@@ -1589,21 +1667,22 @@ defmodule Calcinator.ControllerTest do
       %TestAuthor{id: id} = Factory.insert(:test_author)
       Ecto.Adapters.SQL.Sandbox.checkin(Repo)
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => id,
-          "data" => %{
-            "type" => "test-authors",
-            "id" => to_string(id),
-            "attributes" => %{
-              "name" => "Eve"
-            }
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
+            "id" => id,
+            "data" => %{
+              "type" => "test-authors",
+              "id" => to_string(id),
+              "attributes" => %{
+                "name" => "Eve"
+              }
+            },
+            "meta" => meta
           },
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_sandox_access_disallowed(conn)
     end
@@ -1612,70 +1691,73 @@ defmodule Calcinator.ControllerTest do
       :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => id,
-          "data" => %{
-            "type" => "test-authors",
-            "id" => to_string(id),
-            "attributes" => %{
-              "name" => "Eve"
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
+            "id" => id,
+            "data" => %{
+              "type" => "test-authors",
+              "id" => to_string(id),
+              "attributes" => %{
+                "name" => "Eve"
+              }
             }
-          }
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          },
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_sandbox_token_missing(conn)
     end
 
     test "{:error, :timeout} from Calcinator.Resources.get/2", %{conn: conn} do
-      Application.put_env(:calcinator, TestAuthors, [get: {:error, :timeout}])
+      Application.put_env(:calcinator, TestAuthors, get: {:error, :timeout})
 
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => id,
-          "data" => %{
-            "type" => "test-authors",
-            "id" => to_string(id),
-            "attributes" => %{
-              "name" => "Eve"
-            }
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
+            "id" => id,
+            "data" => %{
+              "type" => "test-authors",
+              "id" => to_string(id),
+              "attributes" => %{
+                "name" => "Eve"
+              }
+            },
+            "meta" => meta
           },
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_timeout(conn)
     end
 
     test "{:error, :timeout} from Calcinator.Resources.update/1", %{conn: conn} do
-      Application.put_env(:calcinator, TestAuthors, [update: {:error, :timeout}])
+      Application.put_env(:calcinator, TestAuthors, update: {:error, :timeout})
 
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => id,
-          "data" => %{
-            "type" => "test-authors",
-            "id" => to_string(id),
-            "attributes" => %{
-              "name" => "Eve"
-            }
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
+            "id" => id,
+            "data" => %{
+              "type" => "test-authors",
+              "id" => to_string(id),
+              "attributes" => %{
+                "name" => "Eve"
+              }
+            },
+            "meta" => meta
           },
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert_timeout(conn)
     end
@@ -1684,26 +1766,27 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => id,
-          "data" => %{
-            "type" => "test-authors",
-            "id" => to_string(id),
-            "attributes" => %{
-              "name" => "Eve"
-            }
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
+            "id" => id,
+            "data" => %{
+              "type" => "test-authors",
+              "id" => to_string(id),
+              "attributes" => %{
+                "name" => "Eve"
+              }
+            },
+            "meta" => meta
           },
-          "meta" => meta
-        },
-        %Calcinator{
-          authorization_module: Cant,
-          ecto_schema_module: TestAuthor,
-          resources_module: TestAuthors,
-          view_module: TestAuthorView
-        }
-      )
+          %Calcinator{
+            authorization_module: Cant,
+            ecto_schema_module: TestAuthor,
+            resources_module: TestAuthors,
+            view_module: TestAuthorView
+          }
+        )
 
       assert_unauthorized(conn)
     end
@@ -1712,25 +1795,27 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => id,
-          "data" => %{
-            "type" => "test-authors",
-            "id" => to_string(id),
-            "attributes" => %{
-              "name" => "Eve"
-            }
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
+            "id" => id,
+            "data" => %{
+              "type" => "test-authors",
+              "id" => to_string(id),
+              "attributes" => %{
+                "name" => "Eve"
+              }
+            },
+            "include" => "post",
+            "meta" => meta
           },
-          "include" => "post",
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
       assert length(errors) == 1
+
       assert %{
                "detail" => "`post` is an unknown relationship path",
                "meta" => %{
@@ -1748,24 +1833,26 @@ defmodule Calcinator.ControllerTest do
       author = %TestAuthor{id: id} = Factory.insert(:test_author)
       Factory.insert(:test_post, author: author)
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => id,
-          "data" => %{
-            "type" => "test-authors",
-            "id" => to_string(id),
-            "attributes" => %{
-              "name" => nil
-            }
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
+            "id" => id,
+            "data" => %{
+              "type" => "test-authors",
+              "id" => to_string(id),
+              "attributes" => %{
+                "name" => nil
+              }
+            },
+            "meta" => meta
           },
-          "meta" => meta
-        },
-        %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
-      )
+          %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
       assert length(errors) == 1
+
       assert %{
                "detail" => "name can't be blank",
                "source" => %{
@@ -1781,46 +1868,48 @@ defmodule Calcinator.ControllerTest do
       %TestPost{id: id} = Factory.insert(:test_post, tags: [test_tag])
       updated_body = "Updated Body"
 
-      conn = Calcinator.Controller.update(
-        conn,
-        %{
-          "id" => to_string(id),
-          "data" => %{
-            "type" => "test-posts",
+      conn =
+        Calcinator.Controller.update(
+          conn,
+          %{
             "id" => to_string(id),
-            "attributes" => %{
-              "body" => updated_body
-            },
-            # Test `many_to_many` update does replacement
-            "relationships" => %{
-              "tags" => %{
-                "data" => [
-                  %{
-                    "type" => "test-tags",
-                    "id" => to_string(-1)
-                  }
-                ]
+            "data" => %{
+              "type" => "test-posts",
+              "id" => to_string(id),
+              "attributes" => %{
+                "body" => updated_body
+              },
+              # Test `many_to_many` update does replacement
+              "relationships" => %{
+                "tags" => %{
+                  "data" => [
+                    %{
+                      "type" => "test-tags",
+                      "id" => to_string(-1)
+                    }
+                  ]
+                }
               }
-            }
+            },
+            "include" => "author,tags",
+            "meta" => meta
           },
-          "include" => "author,tags",
-          "meta" => meta
-        },
-        %Calcinator{
-          associations_by_include: %{
-            "author" => :author,
-            "tags" => :tags
-          },
-          ecto_schema_module: TestPost,
-          resources_module: TestPosts,
-          view_module: TestPostView
-        }
-      )
+          %Calcinator{
+            associations_by_include: %{
+              "author" => :author,
+              "tags" => :tags
+            },
+            ecto_schema_module: TestPost,
+            resources_module: TestPosts,
+            view_module: TestPostView
+          }
+        )
 
       assert %{"errors" => errors} = json_response(conn, 422)
 
       assert is_list(errors)
       assert length(errors) == 1
+
       assert %{
                "detail" => "tags has element at index 0 whose id (-1) does not exist",
                "source" => %{
@@ -1834,7 +1923,7 @@ defmodule Calcinator.ControllerTest do
       meta = checkout_meta()
       %TestAuthor{id: id} = Factory.insert(:test_author)
 
-      assert_error_reason :update, fn ->
+      assert_error_reason(:update, fn ->
         Calcinator.Controller.update(
           conn,
           %{
@@ -1850,7 +1939,7 @@ defmodule Calcinator.ControllerTest do
           },
           %Calcinator{ecto_schema_module: TestAuthor, resources_module: TestAuthors, view_module: TestAuthorView}
         )
-      end
+      end)
     end
   end
 
@@ -1862,23 +1951,26 @@ defmodule Calcinator.ControllerTest do
     reason = "A secret reason"
     Application.put_env(:calcinator, TestAuthors, [{action, {:error, reason}}])
 
-    log = capture_log [level: :error], fn ->
-      conn = plug.()
+    log =
+      capture_log([level: :error], fn ->
+        conn = plug.()
 
-      assert %{"errors" => errors} = json_response(conn, 500)
-      assert [error] = errors
-      assert %{
-               "id" => error_id,
-               "status" => "500",
-               "title" => "Internal Server Error"
-             } = error
+        assert %{"errors" => errors} = json_response(conn, 500)
+        assert [error] = errors
 
-      send self(), {:error_id, error_id}
-    end
+        assert %{
+                 "id" => error_id,
+                 "status" => "500",
+                 "title" => "Internal Server Error"
+               } = error
 
-    error_id = receive do
-      {:error_id, error_id} -> error_id
-    end
+        send(self(), {:error_id, error_id})
+      end)
+
+    error_id =
+      receive do
+        {:error_id, error_id} -> error_id
+      end
 
     assert String.contains?(log, "id=#{error_id} reason=#{inspect(reason)}")
   end
@@ -1887,6 +1979,7 @@ defmodule Calcinator.ControllerTest do
     assert %{"errors" => errors} = json_response(conn, :not_found)
     assert is_list(errors)
     assert length(errors) == 1
+
     assert %{
              "source" => %{
                "parameter" => parameter
@@ -1899,6 +1992,7 @@ defmodule Calcinator.ControllerTest do
   defp assert_sandox_access_disallowed(conn) do
     assert %{"errors" => errors} = json_response(conn, 422)
     assert length(errors) == 1
+
     assert %{
              "detail" => "Information in /meta/beam was not enough to grant access to the sandbox",
              "source" => %{
@@ -1912,6 +2006,7 @@ defmodule Calcinator.ControllerTest do
   defp assert_sandbox_token_missing(conn) do
     assert %{"errors" => errors} = json_response(conn, 422)
     assert length(errors) == 1
+
     assert %{
              "detail" => "`/meta/beam` is missing",
              "meta" => %{
@@ -1928,6 +2023,7 @@ defmodule Calcinator.ControllerTest do
   defp assert_timeout(conn) do
     assert %{"errors" => errors} = json_response(conn, 504)
     assert length(errors) == 1
+
     assert %{
              "status" => "504",
              "title" => "Gateway Timeout"
@@ -1937,6 +2033,7 @@ defmodule Calcinator.ControllerTest do
   defp assert_unauthorized(conn) do
     assert %{"errors" => errors} = json_response(conn, 403)
     assert length(errors) == 1
+
     assert %{
              "detail" => "You do not have permission for this resource.",
              "status" => "403",
@@ -1945,15 +2042,11 @@ defmodule Calcinator.ControllerTest do
   end
 
   def resource_by_id_by_type(included) do
-    Enum.reduce(
-      included,
-      %{},
-      fn resource = %{"id" => id, "type" => type}, resource_by_id_by_type ->
-        resource_by_id_by_type
-        |> Map.put_new(type, %{})
-        |> put_in([type, id], resource)
-      end
-    )
+    Enum.reduce(included, %{}, fn resource = %{"id" => id, "type" => type}, resource_by_id_by_type ->
+      resource_by_id_by_type
+      |> Map.put_new(type, %{})
+      |> put_in([type, id], resource)
+    end)
   end
 
   defp test_author_resource(%TestAuthor{id: id, name: name}) do

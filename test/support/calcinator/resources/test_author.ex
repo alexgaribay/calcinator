@@ -8,11 +8,11 @@ defmodule Calcinator.Resources.TestAuthor do
   import Ecto.Changeset, only: [cast: 3, no_assoc_constraint: 2, validate_required: 2]
 
   schema "authors" do
-    field :name, :string
-    field :password, :string, virtual: true
-    field :password_confirmation, :string, virtual: true
+    field(:name, :string)
+    field(:password, :string, virtual: true)
+    field(:password_confirmation, :string, virtual: true)
 
-    has_many :posts, Calcinator.Resources.TestPost, foreign_key: :author_id
+    has_many(:posts, Calcinator.Resources.TestPost, foreign_key: :author_id)
   end
 
   # Functions

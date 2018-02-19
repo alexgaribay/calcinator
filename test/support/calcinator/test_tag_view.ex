@@ -6,19 +6,17 @@ defmodule Calcinator.TestTagView do
   alias Calcinator.TestPostView
 
   use JaSerializer.PhoenixView
-  use Calcinator.JaSerializer.PhoenixView,
-      phoenix_view_module: __MODULE__
+  use Calcinator.JaSerializer.PhoenixView, phoenix_view_module: __MODULE__
 
-  location "/api/v1/test-tags/:id"
+  location("/api/v1/test-tags/:id")
 
   # Attributes
 
-  attributes ~w(name)a
+  attributes(~w(name)a)
 
   # Relationships
 
-  has_many :posts,
-           serializers: TestPostView
+  has_many(:posts, serializers: TestPostView)
 
   ## JaSerializer.PhoenixView callbacks
 

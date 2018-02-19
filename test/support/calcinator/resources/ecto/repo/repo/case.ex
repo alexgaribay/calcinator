@@ -15,11 +15,8 @@ defmodule Calcinator.Resources.Ecto.Repo.Repo.Case do
 
     %{}
     |> Beam.put(Repo)
-    |> Enum.into(
-         %{},
-         fn {key, value} ->
-           {to_string(key), value}
-         end
-       )
+    |> Enum.into(%{}, fn {key, value} ->
+      {to_string(key), value}
+    end)
   end
 end

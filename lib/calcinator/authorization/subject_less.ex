@@ -35,10 +35,11 @@ defmodule Calcinator.Authorization.SubjectLess do
   """
   @impl Calcinator.Authorization
   def can?(nil, _, _), do: true
+
   def can?(subject, _, _) do
     raise ArgumentError,
-          "#{inspect __MODULE__}.can?/3 should only be called with a `nil` subject, " <>
-          "but was called with `#{inspect subject}`"
+          "#{inspect(__MODULE__)}.can?/3 should only be called with a `nil` subject, " <>
+            "but was called with `#{inspect(subject)}`"
   end
 
   @doc """
@@ -95,10 +96,11 @@ defmodule Calcinator.Authorization.SubjectLess do
   """
   @impl Calcinator.Authorization
   def filter_associations_can(target, nil, _), do: target
+
   def filter_associations_can(_, subject, _) do
     raise ArgumentError,
-          "#{inspect __MODULE__}.filter_associations_can/3 should only be called with a `nil` subject, " <>
-          "but was called with `#{inspect subject}`"
+          "#{inspect(__MODULE__)}.filter_associations_can/3 should only be called with a `nil` subject, " <>
+            "but was called with `#{inspect(subject)}`"
   end
 
   @doc """
@@ -143,9 +145,10 @@ defmodule Calcinator.Authorization.SubjectLess do
   """
   @impl Calcinator.Authorization
   def filter_can(targets, nil, _), do: targets
+
   def filter_can(_, subject, _) do
     raise ArgumentError,
-          "#{inspect __MODULE__}.filter_can/3 should only be called with a `nil` subject, " <>
-          "but was called with `#{inspect subject}`"
+          "#{inspect(__MODULE__)}.filter_can/3 should only be called with a `nil` subject, " <>
+            "but was called with `#{inspect(subject)}`"
   end
 end

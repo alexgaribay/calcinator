@@ -6,10 +6,10 @@ defmodule Calcinator.Resources.TestComment do
   use Ecto.Schema
 
   schema "comments" do
-    field :text, :string
+    field(:text, :string)
 
     timestamps()
 
-    belongs_to :post, Calcinator.Resources.TestPost
+    belongs_to(:post, Calcinator.Resources.TestPost)
   end
 end

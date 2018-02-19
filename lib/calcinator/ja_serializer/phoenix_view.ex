@@ -42,7 +42,7 @@ defmodule Calcinator.JaSerializer.PhoenixView do
 
       @impl Calcinator.View
       def show_relationship(data, options),
-          do: PhoenixView.show_relationship(unquote(phoenix_view_module), data, options)
+        do: PhoenixView.show_relationship(unquote(phoenix_view_module), data, options)
     end
   end
 
@@ -54,21 +54,18 @@ defmodule Calcinator.JaSerializer.PhoenixView do
     subject = Map.get(options, :subject, nil)
     opts = params_to_render_opts(params)
 
-    phoenix_view_module.render(
-      "get_related_resource.json-api",
-      %{
-        conn: %Conn{
-          assigns: %{
-            subject: subject
-          }
-        },
-        data: data,
-        opts: opts,
-        params: params,
-        related: related,
-        source: source
-      }
-    )
+    phoenix_view_module.render("get_related_resource.json-api", %{
+      conn: %Conn{
+        assigns: %{
+          subject: subject
+        }
+      },
+      data: data,
+      opts: opts,
+      params: params,
+      related: related,
+      source: source
+    })
   end
 
   def index(phoenix_view_module, data, options) do
@@ -76,9 +73,11 @@ defmodule Calcinator.JaSerializer.PhoenixView do
     params = Map.get(options, :params, %{})
     subject = Map.get(options, :subject, nil)
 
-    opts = []
-           |> Keyword.merge(params_to_render_opts(params))
-           |> Keyword.merge(pagination_to_render_opts(pagination, options))
+    opts =
+      []
+      |> Keyword.merge(params_to_render_opts(params))
+      |> Keyword.merge(pagination_to_render_opts(pagination, options))
+
     # Only `:conn` option is passed to `attributes/2` callback, so have to fake `%Plug.Conn{}`
     phoenix_view_module.render(
       "show.json-api",
@@ -96,6 +95,7 @@ defmodule Calcinator.JaSerializer.PhoenixView do
     params = Map.get(options, :params, %{})
     subject = Map.get(options, :subject, nil)
     opts = params_to_render_opts(params)
+
     phoenix_view_module.render(
       "show.json-api",
       conn: %Conn{
@@ -113,29 +113,26 @@ defmodule Calcinator.JaSerializer.PhoenixView do
     subject = Map.get(options, :subject, nil)
     opts = params_to_render_opts(params)
 
-    phoenix_view_module.render(
-      "show_relationship.json-api",
-      %{
-        conn: %Conn{
-          assigns: %{
-            subject: subject
-          }
-        },
-        data: data,
-        opts: opts,
-        params: params,
-        related: related,
-        source: source
-      }
-    )
+    phoenix_view_module.render("show_relationship.json-api", %{
+      conn: %Conn{
+        assigns: %{
+          subject: subject
+        }
+      },
+      data: data,
+      opts: opts,
+      params: params,
+      related: related,
+      source: source
+    })
   end
 
   ## Private Functions
 
   defp links_to_render_opts_page(links) when is_map(links) do
-    Enum.into links, %{}, fn {string_key, value} ->
+    Enum.into(links, %{}, fn {string_key, value} ->
       {String.to_existing_atom(string_key), value}
-    end
+    end)
   end
 
   defp pagination_to_render_opts(nil, _), do: []
@@ -155,14 +152,16 @@ defmodule Calcinator.JaSerializer.PhoenixView do
   end
 
   defp pagination_to_render_opts_page(pagination, %{base_uri: base_uri}) do
-    render_opts_page = pagination
-                       |> Pagination.to_links(base_uri)
-                       |> links_to_render_opts_page
+    render_opts_page =
+      pagination
+      |> Pagination.to_links(base_uri)
+      |> links_to_render_opts_page
 
     [page: render_opts_page]
   end
 
   defp params_to_render_opts(nil), do: []
+
   defp params_to_render_opts(params) when is_map(params) do
     # must only add opts if in params so that defaults don't get overridden
     Enum.reduce(@render_opts, [], fn render_opts_key, render_opts ->

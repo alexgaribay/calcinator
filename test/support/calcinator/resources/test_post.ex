@@ -10,20 +10,23 @@ defmodule Calcinator.Resources.TestPost do
   alias Calcinator.Resources.{TestAuthor, TestComment, TestTag}
 
   schema "posts" do
-    field :body, :string
+    field(:body, :string)
 
     timestamps()
 
-    belongs_to :author, TestAuthor
-    has_many :comments, TestComment, foreign_key: :post_id
-    many_to_many :tags,
-                 TestTag,
-                 join_keys: [
-                   post_id: :id,
-                   tag_id: :id
-                 ],
-                 join_through: "posts_tags",
-                 on_replace: :delete
+    belongs_to(:author, TestAuthor)
+    has_many(:comments, TestComment, foreign_key: :post_id)
+
+    many_to_many(
+      :tags,
+      TestTag,
+      join_keys: [
+        post_id: :id,
+        tag_id: :id
+      ],
+      join_through: "posts_tags",
+      on_replace: :delete
+    )
   end
 
   # Functions

@@ -29,16 +29,16 @@ defmodule Calcinator.Resources do
     * `:sorts` - the directions to sort fields on the primary resource or its associations
   """
   @type query_options :: %{
-                           optional(:associations) => atom | [atom],
-                           optional(:filters) => %{
-                             String.t => String.t
-                           },
-                           optional(:meta) => %{
-                             String.t => Alembic.json
-                           },
-                           optional(:page) => Page.t | nil,
-                           optional(:sorts) => Sorts.t
-                         }
+          optional(:associations) => atom | [atom],
+          optional(:filters) => %{
+            String.t() => String.t()
+          },
+          optional(:meta) => %{
+            String.t() => Alembic.json()
+          },
+          optional(:page) => Page.t() | nil,
+          optional(:sorts) => Sorts.t()
+        }
 
   @type sandbox_access_token :: %{required(:owner) => term, optional(atom) => any}
 
@@ -65,7 +65,7 @@ defmodule Calcinator.Resources do
       into the `Ecto.Changeset.t` `data` before calling `Ecto.Changeset.put_assoc/3`.
 
   """
-  @callback changeset(params) :: {:ok, Ecto.Changeset.t} | {:error, :ownership}
+  @callback changeset(params) :: {:ok, Ecto.Changeset.t()} | {:error, :ownership}
 
   @doc """
   * Changeset for updating `resource` with `params`.
@@ -79,7 +79,7 @@ defmodule Calcinator.Resources do
       into the `Ecto.Changeset.t` `data` before calling `Ecto.Changeset.put_assoc/3`.
 
   """
-  @callback changeset(resource :: Ecto.Schema.t, params) :: {:ok, Ecto.Changeset.t} | {:error, :ownership}
+  @callback changeset(resource :: Ecto.Schema.t(), params) :: {:ok, Ecto.Changeset.t()} | {:error, :ownership}
 
   @doc """
   Deletes a single struct in a `changeset`
@@ -93,8 +93,8 @@ defmodule Calcinator.Resources do
       errors.  These will normally be constraint errors or only those validations that can occur in `prepare_changes`
       callbacks that require `Ecto.Changeset.t` `action` and or `repo` to be set.
   """
-  @callback delete(changeset :: Ecto.Changeset.t, query_options) ::
-              {:ok, struct} | {:error, :ownership} | {:error, :timeout} | {:error, Ecto.Changeset.t}
+  @callback delete(changeset :: Ecto.Changeset.t(), query_options) ::
+              {:ok, struct} | {:error, :ownership} | {:error, :timeout} | {:error, Ecto.Changeset.t()}
 
   @doc """
   Gets a single `struct`
@@ -108,11 +108,12 @@ defmodule Calcinator.Resources do
     * `{:error, reason}` - an error occurred with the backing store for `reason` that is backing store specific.
 
   """
-  @callback get(id, query_options) :: {:ok, struct} |
-                                      {:error, :not_found} |
-                                      {:error, :ownership} |
-                                      {:error, :timeout} |
-                                      {:error, reason :: term}
+  @callback get(id, query_options) ::
+              {:ok, struct}
+              | {:error, :not_found}
+              | {:error, :ownership}
+              | {:error, :timeout}
+              | {:error, reason :: term}
 
   @doc """
   ## `insert(changeset, query_options)`
@@ -138,8 +139,8 @@ defmodule Calcinator.Resources do
     * `{:error, Ecto.Changeset.t}` - insert failed.  `Ecto.Changeset.t` `errors` contain errors.
 
   """
-  @callback insert(changeset :: Ecto.Changeset.t | params, query_options) ::
-              {:ok, struct} | {:error, :ownership} | {:error, :timeout} | {:error, Ecto.Changeset.t}
+  @callback insert(changeset :: Ecto.Changeset.t() | params, query_options) ::
+              {:ok, struct} | {:error, :ownership} | {:error, :timeout} | {:error, Ecto.Changeset.t()}
 
   @doc """
   Gets a list of `struct`s.
@@ -153,10 +154,11 @@ defmodule Calcinator.Resources do
     * `{:error, reason}` - an error occurred with the backing store for `reason` that is backing store specific.
 
   """
-  @callback list(query_options) :: {:ok, [struct], pagination | nil} |
-                                   {:error, :ownership} |
-                                   {:error, :timeout} |
-                                   {:error, reason :: term}
+  @callback list(query_options) ::
+              {:ok, [struct], pagination | nil}
+              | {:error, :ownership}
+              | {:error, :timeout}
+              | {:error, reason :: term}
 
   @doc """
   # Returns
@@ -177,8 +179,8 @@ defmodule Calcinator.Resources do
     * `{:error, Ecto.Changeset.t}` - errors while updating `struct` with `params`.  `Ecto.Changeset.t` `errors` contains
       errors.
   """
-  @callback update(changeset :: Ecto.Changeset.t, query_options) ::
-              {:ok, struct} | {:error, :ownership} | {:error, :timeout} | {:error, Ecto.Changeset.t}
+  @callback update(changeset :: Ecto.Changeset.t(), query_options) ::
+              {:ok, struct} | {:error, :ownership} | {:error, :timeout} | {:error, Ecto.Changeset.t()}
 
   @doc """
   Updates `struct`
@@ -194,12 +196,13 @@ defmodule Calcinator.Resources do
     * `{:error, :ownership}` - connection to backing store was not owned by the calling process
     * `{:error, :timeout}` - timeout occured while updating `resource` with `params` in backing store.
   """
-  @callback update(resource :: Ecto.Schema.t, params, query_options) :: {:ok, struct} |
-                                                                        {:error, Ecto.Changeset.t} |
-                                                                        {:error, :bad_gateway} |
-                                                                        {:error, :not_found} |
-                                                                        {:error, :ownership} |
-                                                                        {:error, :timeout}
+  @callback update(resource :: Ecto.Schema.t(), params, query_options) ::
+              {:ok, struct}
+              | {:error, Ecto.Changeset.t()}
+              | {:error, :bad_gateway}
+              | {:error, :not_found}
+              | {:error, :ownership}
+              | {:error, :timeout}
 
   # Functions
 
@@ -240,11 +243,12 @@ defmodule Calcinator.Resources do
       do: potential_field
     )
     |> case do
-         [field] ->
-           {:ok, field}
-         [] ->
-           {:error, attribute}
-       end
+      [field] ->
+        {:ok, field}
+
+      [] ->
+        {:error, attribute}
+    end
   end
 
   @doc """
@@ -256,7 +260,7 @@ defmodule Calcinator.Resources do
       ["1", "2", "3"]
 
   """
-  @spec split_filter_value(String.t) :: [String.t]
+  @spec split_filter_value(String.t()) :: [String.t()]
   def split_filter_value(comma_separated), do: String.split(comma_separated, ",")
 
   @doc """
@@ -277,7 +281,7 @@ defmodule Calcinator.Resources do
       }
 
   """
-  @spec unknown_filter(name :: String.t) :: Document.t
+  @spec unknown_filter(name :: String.t()) :: Document.t()
   def unknown_filter(name) do
     %Document{
       errors: [
@@ -301,8 +305,10 @@ defmodule Calcinator.Resources do
 
     # ecto_schema_module.__schema__(:fields) does not include virtual fields, so
     # deduce real and virtual fields from struct keys
-    keys = ecto_schema_module.__struct__
-           |> Map.keys
+    keys =
+      ecto_schema_module.__struct__()
+      |> Map.keys()
+
     keys -- [:__meta__, :__struct__ | associations]
   end
 end

@@ -18,6 +18,7 @@ defmodule Calcinator.Resources.Ecto.Repo.TestAuthors do
     case override(:delete) do
       nil ->
         super(data, query_options)
+
       override ->
         override
     end
@@ -30,9 +31,13 @@ defmodule Calcinator.Resources.Ecto.Repo.TestAuthors do
   end
 
   def filter(query, "posts.body", body_substring) do
-    filter_query = from i in query,
-                        join: p in assoc(i, :posts),
-                        where: ilike(p.body, ^"%#{body_substring}%")
+    filter_query =
+      from(
+        i in query,
+        join: p in assoc(i, :posts),
+        where: ilike(p.body, ^"%#{body_substring}%")
+      )
+
     {:ok, filter_query}
   end
 
@@ -42,6 +47,7 @@ defmodule Calcinator.Resources.Ecto.Repo.TestAuthors do
     case override(:get) do
       nil ->
         super(id, query_options)
+
       override ->
         override
     end
@@ -51,6 +57,7 @@ defmodule Calcinator.Resources.Ecto.Repo.TestAuthors do
     case override(:insert) do
       nil ->
         super(changeset, query_options)
+
       override ->
         override
     end
@@ -60,6 +67,7 @@ defmodule Calcinator.Resources.Ecto.Repo.TestAuthors do
     case override(:list) do
       nil ->
         super(query_options)
+
       override ->
         override
     end
@@ -71,6 +79,7 @@ defmodule Calcinator.Resources.Ecto.Repo.TestAuthors do
     case override(:update) do
       nil ->
         super(changeset, query_options)
+
       override ->
         override
     end

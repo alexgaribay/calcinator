@@ -47,16 +47,13 @@ defmodule Calcinator.RelatedView do
 
   ## Private Functions
 
-  defp id_key_for_id(
-         ":id",
-         %{
-           conn: conn,
-           source: %{
-             resource: resource,
-             view_module: view_module
-           }
+  defp id_key_for_id(":id", %{
+         conn: conn,
+         source: %{
+           resource: resource,
+           view_module: view_module
          }
-       ) do
+       }) do
     resource
     |> view_module.id(conn)
     |> to_string()
@@ -73,7 +70,7 @@ defmodule Calcinator.RelatedView do
     relationship = relationship(association)
 
     %{
-      self: "#{base_url}/#{relationship}",
+      self: "#{base_url}/#{relationship}"
     }
   end
 
@@ -82,10 +79,11 @@ defmodule Calcinator.RelatedView do
       # has_many relationship has relationship in top-level "links" since it is the link for collection of resources
       # has_one with nil data has no object for data, so "links" must go to top-level
       data when is_list(data) or is_nil(data) ->
-        put_in rendered["links"], links(options)
+        put_in(rendered["links"], links(options))
+
       # has_one without nil has an object, so "links" can be added
       data when is_map(data) ->
-        put_in rendered["data"]["links"], links(options)
+        put_in(rendered["data"]["links"], links(options))
     end
   end
 end

@@ -10,7 +10,7 @@ defmodule Calcinator.Alembic.Error do
   @doc """
   Retort returned a 500 JSONAPI error inside a 422 JSONRPC error.
   """
-  @spec bad_gateway() :: Error.t
+  @spec bad_gateway() :: Error.t()
   def bad_gateway do
     %Error{
       status: "502",
@@ -30,13 +30,13 @@ defmodule Calcinator.Alembic.Error do
   ```
 
   """
-  @spec error_reason(reason :: term) :: Error.t
+  @spec error_reason(reason :: term) :: Error.t()
   def error_reason(reason) do
     id = UUID.uuid4()
 
-    Logger.error fn ->
+    Logger.error(fn ->
       "id=#{id} reason=#{inspect(reason)}"
-    end
+    end)
 
     %Error{
       id: id,
@@ -48,7 +48,7 @@ defmodule Calcinator.Alembic.Error do
   @doc """
   The current resource or action is forbidden to the authenticated user
   """
-  @spec forbidden :: Error.t
+  @spec forbidden :: Error.t()
   def forbidden do
     %Error{
       detail: "You do not have permission for this resource.",
@@ -60,7 +60,7 @@ defmodule Calcinator.Alembic.Error do
   @doc """
   504 Gateway Timeout JSONAPI error.
   """
-  @spec gateway_timeout :: Error.t
+  @spec gateway_timeout :: Error.t()
   def gateway_timeout do
     %Error{
       status: "504",
@@ -71,7 +71,7 @@ defmodule Calcinator.Alembic.Error do
   @doc """
   Puts 404 Resource Not Found JSONAPI error with `parameter` as the source parameter.
   """
-  @spec not_found(String.t) :: Error.t
+  @spec not_found(String.t()) :: Error.t()
   def not_found(parameter) do
     %Error{
       source: %Source{
@@ -85,7 +85,7 @@ defmodule Calcinator.Alembic.Error do
   @doc """
   500 Internal Server Error JSONAPI error document with error with title `"Ownership Error"`.
   """
-  @spec ownership_error :: Error.t
+  @spec ownership_error :: Error.t()
   def ownership_error do
     %Error{
       detail: "Owner of backing store connection could not be found",
@@ -97,7 +97,7 @@ defmodule Calcinator.Alembic.Error do
   @doc """
   Puts 422 Unprocessable Entity JSONAPI error with title `"Sandbox Access Disallowed"`.
   """
-  @spec sandbox_access_disallowed :: Error.t
+  @spec sandbox_access_disallowed :: Error.t()
   def sandbox_access_disallowed do
     %Error{
       detail: "Information in /meta/beam was not enough to grant access to the sandbox",
@@ -112,7 +112,7 @@ defmodule Calcinator.Alembic.Error do
   @doc """
   Puts 422 Unrpcessable Entity JSONAPI error document with error with title `"Child missing"`.
   """
-  @spec sandbox_token_missing :: Error.t
+  @spec sandbox_token_missing :: Error.t()
   def sandbox_token_missing do
     Error.missing(
       %Error{
@@ -127,6 +127,6 @@ defmodule Calcinator.Alembic.Error do
   @doc """
   Puts `error` in `Alembic.Document.t` as the only error.
   """
-  @spec to_document(Error.t) :: Document.t
+  @spec to_document(Error.t()) :: Document.t()
   def to_document(error), do: %Document{errors: [error]}
 end

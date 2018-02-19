@@ -19,7 +19,7 @@ defmodule Calcinator.Resources.Sort do
   @typedoc """
   Keyword list of association path used to Ecto preloading
   """
-  @type association :: Keyword.t
+  @type association :: Keyword.t()
 
   @typedoc """
   The direction to sort.  Default to `:ascending` per the JSONAPI spec.  Can be `:descending` when the dot-separated
@@ -38,10 +38,10 @@ defmodule Calcinator.Resources.Sort do
   * `:field` - name of the field to sort
   """
   @type t :: %__MODULE__{
-               association: nil | association,
-               direction: direction,
-               field: field_name,
-             }
+          association: nil | association,
+          direction: direction,
+          field: field_name
+        }
 
   @typedoc """
   Used to convert includes used by JSONAPI to the corresponding association in Ecto.
@@ -50,7 +50,7 @@ defmodule Calcinator.Resources.Sort do
   the `Keyword.t` of `associations`, but can include completely different names or associations that the JSONAPI doesn't
   even expose, so that deprecated relationships can be mapped to newer associations.
   """
-  @type associations_by_include :: %{Alembic.Fetch.Includes.t => association}
+  @type associations_by_include :: %{Alembic.Fetch.Includes.t() => association}
 
   @typedoc """
   * `:associations_by_include` - maps the `Alembic.Fetch.Includes.t` to Keyword.t of associations.
@@ -58,9 +58,9 @@ defmodule Calcinator.Resources.Sort do
     associations.
   """
   @type from_alembic_fetch_sort_options :: %{
-                                             required(:associations_by_include) => associations_by_include,
-                                             required(:ecto_schema_module) => module
-                                           }
+          required(:associations_by_include) => associations_by_include,
+          required(:ecto_schema_module) => module
+        }
 
   @typedoc """
   Used to convert associations used in Ecto to JSONAPI includes.
@@ -68,7 +68,7 @@ defmodule Calcinator.Resources.Sort do
   This map need not be the inverse of `associations_by_include` if the JSONAPI incoming relationships are no the same
   as the outgoing relationships.
   """
-  @type include_by_associations :: %{association => Alembic.Fetch.Includes.t}
+  @type include_by_associations :: %{association => Alembic.Fetch.Includes.t()}
 
   # Functions
 
@@ -275,15 +275,12 @@ defmodule Calcinator.Resources.Sort do
       }
 
   """
-  @spec from_alembic_fetch_sort(Alembic.Fetch.Sort.t, from_alembic_fetch_sort_options) ::
-          {:ok, t} | {:error, Document.t}
-  def from_alembic_fetch_sort(
-        sort = %Alembic.Fetch.Sort{direction: direction, relationship: relationship},
-        %{
-          associations_by_include: associations_by_include,
-          ecto_schema_module: ecto_schema_module
-        }
-      ) do
+  @spec from_alembic_fetch_sort(Alembic.Fetch.Sort.t(), from_alembic_fetch_sort_options) ::
+          {:ok, t} | {:error, Document.t()}
+  def from_alembic_fetch_sort(sort = %Alembic.Fetch.Sort{direction: direction, relationship: relationship}, %{
+        associations_by_include: associations_by_include,
+        ecto_schema_module: ecto_schema_module
+      }) do
     with {:ok, association} <- association(relationship, associations_by_include),
          {:ok, field} <- field(%{association: association, ecto_schema_module: ecto_schema_module, sort: sort}) do
       {:ok, %__MODULE__{association: association, direction: direction, field: field}}
@@ -294,7 +291,7 @@ defmodule Calcinator.Resources.Sort do
   Maps `t` `field` to `Alembic.Fetch.Sort.t` `attribute` and `t` `associations` to `Alembic.Fetch.Sort.t`
   `relationships`.
   """
-  @spec to_alembic_fetch_sort(t, Resources.t) :: {:ok, Alembic.Fetch.Sort.t} | {:error, Document.t}
+  @spec to_alembic_fetch_sort(t, Resources.t()) :: {:ok, Alembic.Fetch.Sort.t()} | {:error, Document.t()}
   def to_alembic_fetch_sort(%__MODULE__{association: association, direction: direction, field: field}, module) do
     {
       :ok,
@@ -309,6 +306,7 @@ defmodule Calcinator.Resources.Sort do
   ## Private Functions
 
   defp association(nil, _), do: {:ok, nil}
+
   defp association(relationship, associations_by_include) when is_binary(relationship) or is_map(relationship) do
     with {:ok, [association]} <- Includes.to_preloads([relationship], associations_by_include) do
       {:ok, association}
@@ -333,69 +331,66 @@ defmodule Calcinator.Resources.Sort do
   end
 
   defp attribute_error(%Alembic.Fetch.Sort{attribute: attribute, relationship: nil}) do
-    attribute_error %Error{
+    attribute_error(%Error{
       detail: "Does not have `#{attribute}` attribute",
       meta: %{
         "attribute" => attribute
       }
-    }
+    })
   end
 
   defp attribute_error(%Alembic.Fetch.Sort{attribute: attribute, relationship: relationship}) do
     relationship_path = Includes.to_string([relationship])
 
-    attribute_error %Error{
+    attribute_error(%Error{
       detail: "`#{relationship_path}` does not have a `#{attribute}` attribute",
       meta: %{
         "attribute" => attribute,
         "relationship_path" => relationship_path
       }
-    }
+    })
   end
 
   defp attribute_error_document(sort), do: %Document{errors: [attribute_error(sort)]}
 
   defp attribute_error_result(sort), do: {:error, attribute_error_document(sort)}
 
-  defp field(
-         %{
-           association: nil,
-           ecto_schema_module: ecto_schema_module,
-           sort: sort = %Alembic.Fetch.Sort{
+  defp field(%{
+         association: nil,
+         ecto_schema_module: ecto_schema_module,
+         sort:
+           sort = %Alembic.Fetch.Sort{
              attribute: attribute
            }
-         }
-       ) do
+       }) do
     attribute
     |> attribute_to_field(ecto_schema_module)
     |> case do
-         {:ok, field} ->
-           {:ok, field}
-         {:error, ^attribute} ->
-           attribute_error_result(sort)
-       end
+      {:ok, field} ->
+        {:ok, field}
+
+      {:error, ^attribute} ->
+        attribute_error_result(sort)
+    end
   end
 
-  defp field(
-         %{
-           association: association,
-           ecto_schema_module: ecto_schema_module,
-           sort: sort
-         }
-       ) when is_atom(association) do
+  defp field(%{
+         association: association,
+         ecto_schema_module: ecto_schema_module,
+         sort: sort
+       })
+       when is_atom(association) do
     # Does not produce a JSON error because association being wrong is a programmer error that associatons_by_include
     # has a bad associciations
     %{related: related_ecto_schema_module} = ecto_schema_module.__schema__(:association, association)
     field(%{association: nil, ecto_schema_module: related_ecto_schema_module, sort: sort})
   end
 
-  defp field(
-         %{
-           association: [{current_association, child_association}],
-           ecto_schema_module: ecto_schema_module,
-           sort: sort
-         }
-       ) do
+  defp field(%{
+         association: [{current_association, child_association}],
+         ecto_schema_module: ecto_schema_module,
+         sort: sort
+       }) do
     # Does not produce a JSON error because association being wrong is a programmer error that associatons_by_include
     # has a bad associciations
     %{related: related_ecto_schema_module} = ecto_schema_module.__schema__(:association, current_association)

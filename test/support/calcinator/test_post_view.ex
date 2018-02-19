@@ -7,21 +7,18 @@ defmodule Calcinator.TestPostView do
   alias Calcinator.Resources.TestPost
 
   use JaSerializer.PhoenixView
-  use Calcinator.JaSerializer.PhoenixView,
-      phoenix_view_module: __MODULE__
+  use Calcinator.JaSerializer.PhoenixView, phoenix_view_module: __MODULE__
 
-  location "/api/v1/test-posts/:id"
+  location("/api/v1/test-posts/:id")
 
   # Attributes
 
-  attributes ~w(body)a
+  attributes(~w(body)a)
 
   # Relationships
 
-  has_one :author,
-          serializer: TestAuthorView
-  has_many :tags,
-           serializer: TestTagView
+  has_one(:author, serializer: TestAuthorView)
+  has_many(:tags, serializer: TestTagView)
 
   # Functions
 
@@ -48,21 +45,19 @@ defmodule Calcinator.TestPostView do
   ## Private Functions
 
   defp relationships_filter(test_post = %TestPost{}) do
-    not_loaded_names = Enum.reduce(
-      [author: :author],
-      [],
-      fn {field, relationship}, acc ->
+    not_loaded_names =
+      Enum.reduce([author: :author], [], fn {field, relationship}, acc ->
         case Map.get(test_post, field) do
           %Ecto.Association.NotLoaded{} ->
             [relationship | acc]
+
           _ ->
             acc
         end
-      end
-    )
+      end)
 
     fn {name, _relationship} ->
-      not name in not_loaded_names
+      name not in not_loaded_names
     end
   end
 end

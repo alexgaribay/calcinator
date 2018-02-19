@@ -23,7 +23,8 @@ defmodule Mix.Tasks.Calcinator.Ecto.Wait do
 
   # Constats
 
-  @wait_for_connection_sleep 5_000 # ms
+  # ms
+  @wait_for_connection_sleep 5_000
 
   # Functions
 
@@ -31,16 +32,17 @@ defmodule Mix.Tasks.Calcinator.Ecto.Wait do
   def run(args) do
     repos = parse_repo(args)
 
-    Enum.each repos, fn repo ->
+    Enum.each(repos, fn repo ->
       ensure_repo(repo, args)
+
       ensure_implements(
         repo.__adapter__,
         Ecto.Adapter.Storage,
-        "to connect to storage for #{inspect repo}"
+        "to connect to storage for #{inspect(repo)}"
       )
 
       wait_for_connection(repo.config)
-    end
+    end)
   end
 
   ## Private Functions
@@ -56,16 +58,17 @@ defmodule Mix.Tasks.Calcinator.Ecto.Wait do
 
     {:ok, conn} = Postgrex.start_link(opts)
 
-    value = try do
-      #repo.all(Ecto.Query.from(a in "pg_stat_activity", select: a.pid))
-      Ecto.Adapters.Postgres.Connection.execute(conn, "SELECT * FROM pg_stat_activity", [], opts)
-    rescue
-      DBConnection.ConnectionError ->
-        :error
-    else
-      _ ->
-        :ok
-    end
+    value =
+      try do
+        # repo.all(Ecto.Query.from(a in "pg_stat_activity", select: a.pid))
+        Ecto.Adapters.Postgres.Connection.execute(conn, "SELECT * FROM pg_stat_activity", [], opts)
+      rescue
+        DBConnection.ConnectionError ->
+          :error
+      else
+        _ ->
+          :ok
+      end
 
     GenServer.stop(conn)
 
@@ -74,7 +77,7 @@ defmodule Mix.Tasks.Calcinator.Ecto.Wait do
 
   defp wait_for_connection(opts) do
     with :error <- connect(opts) do
-      Logger.warn fn ->
+      Logger.warn(fn ->
         [
           "Could not connect.  Retrying in ",
           @wait_for_connection_sleep
@@ -82,9 +85,9 @@ defmodule Mix.Tasks.Calcinator.Ecto.Wait do
           |> to_string(),
           " seconds."
         ]
-      end
+      end)
 
-      Process.sleep @wait_for_connection_sleep
+      Process.sleep(@wait_for_connection_sleep)
 
       wait_for_connection(opts)
     end

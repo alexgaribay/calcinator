@@ -43,14 +43,14 @@ defmodule Calcinator.Authorization.Can do
   @doc """
   `nil` out all associations where the `subject` can't do `action` on the association's model
   """
-  @spec filter_associations_can(struct, Authorization.subject, Authorization.action, t) :: struct
+  @spec filter_associations_can(struct, Authorization.subject(), Authorization.action(), t) :: struct
   def filter_associations_can(model = %{__struct__: ecto_schema}, subject, action, callback_module) do
-    Enum.reduce ecto_schema.__schema__(:associations), model, fn association_name, acc ->
+    Enum.reduce(ecto_schema.__schema__(:associations), model, fn association_name, acc ->
       Map.update!(acc, association_name, &filter_association_can(&1, [acc], subject, action, callback_module))
-    end
+    end)
   end
 
-  @spec filter_associations_can([struct], Authorization.subject, Authorization.action, t) :: [struct]
+  @spec filter_associations_can([struct], Authorization.subject(), Authorization.action(), t) :: [struct]
   def filter_associations_can(models, subject, action, callback_module) when is_list(models) do
     models
     |> filter_can(subject, action, callback_module)
@@ -60,7 +60,7 @@ defmodule Calcinator.Authorization.Can do
   @doc """
   Filters `models` to only those where `subject` can do `action` to a specific model in `models`.
   """
-  @spec filter_can([struct], Authorization.subject, Authorization.action, t) :: [struct]
+  @spec filter_can([struct], Authorization.subject(), Authorization.action(), t) :: [struct]
   def filter_can(models, subject, action, callback_module) when is_list(models) do
     Enum.filter(models, &callback_module.can?(subject, action, &1))
   end
@@ -69,7 +69,7 @@ defmodule Calcinator.Authorization.Can do
   Filters `association_models` to only those `association_model`s where `subject` can do `action` on the combined
   association path of `[association_model | association_ascent]`.
   """
-  @spec filter_can([struct], Authorization.association_ascent, Authorization.subject, Authorization.action, t) ::
+  @spec filter_can([struct], Authorization.association_ascent(), Authorization.subject(), Authorization.action(), t) ::
           [struct]
   def filter_can(association_models, association_ascent, subject, action, callback_module)
       when is_list(association_models) and is_list(association_ascent) do
@@ -80,15 +80,25 @@ defmodule Calcinator.Authorization.Can do
 
   #  `nil` out association if the `subject` can't do `action` on the association's model.  Otherwise, recursively
   #  `filter_associations_can` on the association model's associations.
-  @spec filter_association_can(nil, Authorization.association_ascent, Authorization.subject, Authorization.action, t) ::
-          nil
-  @spec filter_association_can(struct, Authorization.association_ascent, Authorization.subject, Authorization.action, t)
-        :: struct | nil
+  @spec filter_association_can(
+          nil,
+          Authorization.association_ascent(),
+          Authorization.subject(),
+          Authorization.action(),
+          t
+        ) :: nil
+  @spec filter_association_can(
+          struct,
+          Authorization.association_ascent(),
+          Authorization.subject(),
+          Authorization.action(),
+          t
+        ) :: struct | nil
   @spec filter_association_can(
           [struct],
-          Authorization.association_ascent,
-          Authorization.subject,
-          Authorization.action,
+          Authorization.association_ascent(),
+          Authorization.subject(),
+          Authorization.action(),
           t
         ) :: [struct]
 
@@ -103,7 +113,7 @@ defmodule Calcinator.Authorization.Can do
   end
 
   defp filter_association_can(association_model, association_ascent, subject, action, callback_module) do
-    if callback_module.can? subject, action, [association_model | association_ascent] do
+    if callback_module.can?(subject, action, [association_model | association_ascent]) do
       filter_associations_can(association_model, association_ascent, subject, action, callback_module)
     else
       nil
@@ -114,9 +124,9 @@ defmodule Calcinator.Authorization.Can do
 
   @spec filter_associations_can(
           struct,
-          Authorization.association_ascent,
-          Authorization.subject,
-          Authorization.action,
+          Authorization.association_ascent(),
+          Authorization.subject(),
+          Authorization.action(),
           t
         ) :: struct
   defp filter_associations_can(
@@ -126,20 +136,20 @@ defmodule Calcinator.Authorization.Can do
          action,
          callback_module
        ) do
-    Enum.reduce ecto_schema_module.__schema__(:associations), association_model, fn association_name, acc ->
+    Enum.reduce(ecto_schema_module.__schema__(:associations), association_model, fn association_name, acc ->
       Map.update!(
         acc,
         association_name,
         &filter_association_can(&1, [acc | association_ascent], subject, action, callback_module)
       )
-    end
+    end)
   end
 
   @spec filter_associations_can(
           [struct],
-          Authorization.association_ascent,
-          Authorization.subject,
-          Authorization.action,
+          Authorization.association_ascent(),
+          Authorization.subject(),
+          Authorization.action(),
           t
         ) :: [struct]
   defp filter_associations_can(association_models, association_ascent, subject, action, callback_module)

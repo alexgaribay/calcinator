@@ -15,7 +15,7 @@ defmodule Calcinator.View do
   @typedoc """
   The raw request params that need to be parsed for view options
   """
-  @type params :: %{String.t => term}
+  @type params :: %{String.t() => term}
 
   @typedoc """
   Resource(s) related to resource through a relationship
@@ -37,29 +37,23 @@ defmodule Calcinator.View do
   @doc """
   Rendered `related` iodata.
   """
-  @callback get_related_resource(
-              related,
-              %{
-                optional(:params) => params,
-                optional(:related) => related,
-                optional(:source) => struct,
-                optional(:subject) => subject
-              }
-            ) :: iodata
+  @callback get_related_resource(related, %{
+              optional(:params) => params,
+              optional(:related) => related,
+              optional(:source) => struct,
+              optional(:subject) => subject
+            }) :: iodata
 
   @doc """
   Renders list of `struct` with optional pagination, params, and subject (for view-level authorization of individual
   attributes). `base_uri` is required when `pagination` is present.
   """
-  @callback index(
-              [struct],
-              %{
-                optional(:base_uri) => URI.t,
-                optional(:pagination) => maybe_pagination,
-                optional(:params) => params,
-                optional(:subject) => subject
-              }
-            ) :: iodata
+  @callback index([struct], %{
+              optional(:base_uri) => URI.t(),
+              optional(:pagination) => maybe_pagination,
+              optional(:params) => params,
+              optional(:subject) => subject
+            }) :: iodata
 
   @doc """
   Renders the show iodata for the given `struct` and optional params and subject (for view-level authorization of
@@ -70,13 +64,10 @@ defmodule Calcinator.View do
   @doc """
   Renders [the relationship iodata](http://jsonapi.org/format/#fetching-relationships) for the given `related`.
   """
-  @callback show_relationship(
-              related,
-              %{
-                optional(:params) => params,
-                optional(:related) => related,
-                optional(:source) => struct,
-                optional(:subject) => subject
-              }
-            ) :: iodata
+  @callback show_relationship(related, %{
+              optional(:params) => params,
+              optional(:related) => related,
+              optional(:source) => struct,
+              optional(:subject) => subject
+            }) :: iodata
 end

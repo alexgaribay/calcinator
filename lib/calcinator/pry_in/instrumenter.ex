@@ -127,7 +127,7 @@ if Code.ensure_loaded?(PryIn) do
       end
     end
 
-    #def calcinator_view(:stop, _time_diff, metadata), do: (IO.inspect(metadata); :ok)
+    # def calcinator_view(:stop, _time_diff, metadata), do: (IO.inspect(metadata); :ok)
 
     ## Private Functions
 
@@ -144,63 +144,68 @@ if Code.ensure_loaded?(PryIn) do
         pid: inspect(self())
       ]
 
-      full_data = case Map.fetch(metadata, :offset) do
-        {:ok, offset} -> Keyword.put(data, :offset, offset)
-        :error -> data
-      end
+      full_data =
+        case Map.fetch(metadata, :offset) do
+          {:ok, offset} -> Keyword.put(data, :offset, offset)
+          :error -> data
+        end
 
       InteractionStore.add_custom_metric(self(), full_data)
     end
 
-    defp put_calcinator_resources_context(
-           %{
-             args: [changeset, query_options],
-             callback: callback,
-             prefix: prefix,
-             resources_module: resources_module
-           }
-         ) when callback in ~w(delete insert update)a do
+    defp put_calcinator_resources_context(%{
+           args: [changeset, query_options],
+           callback: callback,
+           prefix: prefix,
+           resources_module: resources_module
+         })
+         when callback in ~w(delete insert update)a do
       put_calcinator_resources_context(%{callback: callback, prefix: prefix, resources_module: resources_module})
       InteractionStore.put_context(self(), "#{prefix}/changeset", target_name(changeset))
       InteractionStore.put_context(self(), "#{prefix}/query_options", inspect(query_options))
     end
 
-    defp put_calcinator_resources_context(
-           %{
-             args: [beam],
-             callback: callback = :allow_sandbox_access,
-             prefix: prefix,
-             resources_module: resources_module
-           }
-         ) do
+    defp put_calcinator_resources_context(%{
+           args: [beam],
+           callback: callback = :allow_sandbox_access,
+           prefix: prefix,
+           resources_module: resources_module
+         }) do
       put_calcinator_resources_context(%{callback: callback, prefix: prefix, resources_module: resources_module})
       InteractionStore.put_context(self(), "#{prefix}/beam", inspect(beam))
     end
 
-    defp put_calcinator_resources_context(
-           %{args: [id, query_options], callback: callback = :get, prefix: prefix, resources_module: resources_module}
-         ) do
+    defp put_calcinator_resources_context(%{
+           args: [id, query_options],
+           callback: callback = :get,
+           prefix: prefix,
+           resources_module: resources_module
+         }) do
       put_calcinator_resources_context(%{callback: callback, prefix: prefix, resources_module: resources_module})
       InteractionStore.put_context(self(), "#{prefix}/id", inspect(id))
       InteractionStore.put_context(self(), "#{prefix}/query_options", inspect(query_options))
     end
 
-    defp put_calcinator_resources_context(
-           %{args: [query_options], callback: callback = :list, prefix: prefix, resources_module: resources_module}
-         ) do
+    defp put_calcinator_resources_context(%{
+           args: [query_options],
+           callback: callback = :list,
+           prefix: prefix,
+           resources_module: resources_module
+         }) do
       put_calcinator_resources_context(%{callback: callback, prefix: prefix, resources_module: resources_module})
       InteractionStore.put_context(self(), "#{prefix}/query_options", inspect(query_options))
     end
 
-    defp put_calcinator_resources_context(
-           %{args: [], callback: callback = :sandboxed?, prefix: prefix, resources_module: resources_module}
-         ) do
+    defp put_calcinator_resources_context(%{
+           args: [],
+           callback: callback = :sandboxed?,
+           prefix: prefix,
+           resources_module: resources_module
+         }) do
       put_calcinator_resources_context(%{callback: callback, prefix: prefix, resources_module: resources_module})
     end
 
-    defp put_calcinator_resources_context(
-           %{callback: callback, prefix: prefix, resources_module: resources_module}
-         ) do
+    defp put_calcinator_resources_context(%{callback: callback, prefix: prefix, resources_module: resources_module}) do
       InteractionStore.put_context(self(), "#{prefix}/resources_module", module_name(resources_module))
       InteractionStore.put_context(self(), "#{prefix}/callback", to_string(callback))
     end
@@ -215,54 +220,47 @@ if Code.ensure_loaded?(PryIn) do
       end
     end
 
-    defp put_calcinator_view_context(
-           %{
-             args: [
-               related_resource,
-               %{
-                 related: %{resource: related_resource},
-                 source: %{association: source_association, resource: source_resource},
-                 subject: subject
-               }
-             ],
-             callback: callback,
-             prefix: prefix,
-             view_module: view_module
-           }
-         ) when callback in ~w(get_related_resource show_relationship)a do
+    defp put_calcinator_view_context(%{
+           args: [
+             related_resource,
+             %{
+               related: %{resource: related_resource},
+               source: %{association: source_association, resource: source_resource},
+               subject: subject
+             }
+           ],
+           callback: callback,
+           prefix: prefix,
+           view_module: view_module
+         })
+         when callback in ~w(get_related_resource show_relationship)a do
       put_calcinator_view_context(%{callback: callback, prefix: prefix, subject: subject, view_module: view_module})
       InteractionStore.put_context(self(), "#{prefix}/source_resource", target_name(source_resource))
       InteractionStore.put_context(self(), "#{prefix}/source_association", target_name(source_association))
       InteractionStore.put_context(self(), "#{prefix}/related_resource", target_name(related_resource))
     end
 
-    defp put_calcinator_view_context(
-           %{
-             args: [resources, %{subject: subject}],
-             callback: callback = :index,
-             prefix: prefix,
-             view_module: view_module
-           }
-         ) do
+    defp put_calcinator_view_context(%{
+           args: [resources, %{subject: subject}],
+           callback: callback = :index,
+           prefix: prefix,
+           view_module: view_module
+         }) do
       put_calcinator_view_context(%{callback: callback, prefix: prefix, subject: subject, view_module: view_module})
       InteractionStore.put_context(self(), "#{prefix}/resources", target_name(resources))
     end
 
-    defp put_calcinator_view_context(
-           %{
-             args: [resource, %{subject: subject}],
-             callback: callback = :show,
-             prefix: prefix,
-             view_module: view_module
-           }
-         ) do
+    defp put_calcinator_view_context(%{
+           args: [resource, %{subject: subject}],
+           callback: callback = :show,
+           prefix: prefix,
+           view_module: view_module
+         }) do
       put_calcinator_view_context(%{callback: callback, prefix: prefix, subject: subject, view_module: view_module})
       InteractionStore.put_context(self(), "#{prefix}/resource", target_name(resource))
     end
 
-    defp put_calcinator_view_context(
-           %{callback: callback, prefix: prefix, subject: subject, view_module: view_module}
-         ) do
+    defp put_calcinator_view_context(%{callback: callback, prefix: prefix, subject: subject, view_module: view_module}) do
       InteractionStore.put_context(self(), "#{prefix}/view_module", module_name(view_module))
       InteractionStore.put_context(self(), "#{prefix}/callback", to_string(callback))
       InteractionStore.put_context(self(), "#{prefix}/subject", subject_name(subject))
@@ -295,10 +293,13 @@ if Code.ensure_loaded?(PryIn) do
 
     defp target_name(nil), do: "nil"
     defp target_name(target) when is_atom(target), do: module_name(target)
+
     defp target_name(%target_module{data: data}) when target_module == Ecto.Changeset do
       "%#{module_name(target_module)}{data: #{target_name(data)}}"
     end
+
     defp target_name(%target_module{id: id}), do: "%#{target_name(target_module)}{id: #{inspect(id)}}"
+
     defp target_name(association_ascent) when is_list(association_ascent) do
       "[#{Enum.map_join(association_ascent, ", ", &target_name/1)}]"
     end

@@ -30,10 +30,10 @@ defmodule Calcinator.Instrumenters do
   #     res0 = Instr0.my_event(:start, compile, runtime)
   #
   @doc false
-  @spec compile_start_callbacks([module], term) :: Macro.t
+  @spec compile_start_callbacks([module], term) :: Macro.t()
   def compile_start_callbacks(instrumenters, event) do
-    Enum.map Enum.with_index(instrumenters), fn {inst, index} ->
-      error_prefix = "Instrumenter #{inspect inst}.#{event}/3 failed.\n"
+    Enum.map(Enum.with_index(instrumenters), fn {inst, index} ->
+      error_prefix = "Instrumenter #{inspect(inst)}.#{event}/3 failed.\n"
 
       quote do
         unquote(build_result_variable(index)) =
@@ -41,10 +41,10 @@ defmodule Calcinator.Instrumenters do
             unquote(inst).unquote(event)(:start, var!(compile), var!(runtime))
           catch
             kind, error ->
-              Logger.error unquote(error_prefix) <> Exception.format(kind, error)
+              Logger.error(unquote(error_prefix) <> Exception.format(kind, error))
           end
       end
-    end
+    end)
   end
 
   # Returns the AST for all the calls to the "stop event" callbacks in the given
@@ -54,20 +54,20 @@ defmodule Calcinator.Instrumenters do
   #     Instr0.my_event(:stop, diff, res0)
   #
   @doc false
-  @spec compile_stop_callbacks([module], term) :: Macro.t
+  @spec compile_stop_callbacks([module], term) :: Macro.t()
   def compile_stop_callbacks(instrumenters, event) do
-    Enum.map Enum.with_index(instrumenters), fn {inst, index} ->
-      error_prefix = "Instrumenter #{inspect inst}.#{event}/3 failed.\n"
+    Enum.map(Enum.with_index(instrumenters), fn {inst, index} ->
+      error_prefix = "Instrumenter #{inspect(inst)}.#{event}/3 failed.\n"
 
       quote do
         try do
           unquote(inst).unquote(event)(:stop, var!(diff), unquote(build_result_variable(index)))
         catch
           kind, error ->
-            Logger.error unquote(error_prefix) <> Exception.format(kind, error)
+            Logger.error(unquote(error_prefix) <> Exception.format(kind, error))
         end
       end
-    end
+    end)
   end
 
   ## Private Functions
@@ -80,10 +80,14 @@ defmodule Calcinator.Instrumenters do
   # instrumenters}` tuples where each tuple represents an event and all the
   # modules interested in that event.
   defp events_to_instrumenters(instrumenters) do
-    instrumenters                                              # [Ins1, Ins2, ...]
-    |> instrumenters_and_events()                              # [{Ins1, e1}, {Ins2, e1}, ...]
-    |> Enum.group_by(fn {_inst, e} -> e end)                   # %{e1 => [{Ins1, e1}, ...], ...}
-    |> Enum.map(fn {e, insts} -> {e, strip_events(insts)} end) # [{e1, [Ins1, Ins2]}, ...]
+    # [Ins1, Ins2, ...]
+    instrumenters
+    # [{Ins1, e1}, {Ins2, e1}, ...]
+    |> instrumenters_and_events()
+     # %{e1 => [{Ins1, e1}, ...], ...}
+    |> Enum.group_by(fn {_inst, e} -> e end)
+     # [{e1, [Ins1, Ins2]}, ...]
+    |> Enum.map(fn {e, insts} -> {e, strip_events(insts)} end)
   end
 
   defp instrumenters_and_events(instrumenters) do
