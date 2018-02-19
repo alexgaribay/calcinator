@@ -91,7 +91,7 @@ defmodule Calcinator.Mixfile do
       },
       # Code coveragei
       {:excoveralls, "~> 0.7.2", only: :test},
-      {:ex_doc, "~> 0.17.1", only: [:dev, :test]},
+      {:ex_doc, "~> 0.18.3", only: [:dev, :test]},
       # documentation coverage
       {:inch_ex, "~> 0.5.1", only: [:dev, :test]},
       # Calcinator.Resources.Ecto.Repo tests
