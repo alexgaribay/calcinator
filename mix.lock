@@ -22,7 +22,7 @@
   "inflex": {:hex, :inflex, "1.8.0", "7cfc752ae244b30b42ac9cf4c092771b485bc3424139aba4a933e54be8c63931", [:mix], [], "hexpm"},
   "ja_serializer": {:hex, :ja_serializer, "0.12.0", "ba4ec5fc7afa6daba815b5cb2b9bd0de410554ac4f0ed54e954d39decb353ca4", [:mix], [{:inflex, "~> 1.4", [hex: :inflex, repo: "hexpm", optional: false]}, {:plug, "> 1.0.0", [hex: :plug, repo: "hexpm", optional: false]}, {:poison, ">= 1.4.0", [hex: :poison, repo: "hexpm", optional: false]}, {:scrivener, "~> 1.2 or ~> 2.0", [hex: :scrivener, repo: "hexpm", optional: true]}], "hexpm"},
   "jsx": {:hex, :jsx, "2.8.3", "a05252d381885240744d955fbe3cf810504eb2567164824e19303ea59eef62cf", [:mix, :rebar3], [], "hexpm"},
-  "junit_formatter": {:hex, :junit_formatter, "2.0.0", "7312342085d619590588fb5532ac2ec7444280d0b7224e85a25aab868ae0038d", [:mix], [], "hexpm"},
+  "junit_formatter": {:hex, :junit_formatter, "2.1.0", "ff03d2bbe9a67041f2488d8e72180ddcf4dff9e9c8a39b79eac9828fcb9e9bbf", [:mix], [], "hexpm"},
   "metrics": {:hex, :metrics, "1.0.1", "25f094dea2cda98213cecc3aeff09e940299d950904393b2a29d191c346a8486", [:rebar3], [], "hexpm"},
   "mime": {:hex, :mime, "1.1.0", "01c1d6f4083d8aa5c7b8c246ade95139620ef8effb009edde934e0ec3b28090a", [:mix], [], "hexpm"},
   "mimerl": {:hex, :mimerl, "1.0.2", "993f9b0e084083405ed8252b99460c4f0563e41729ab42d9074fd5e52439be88", [:rebar3], [], "hexpm"},
