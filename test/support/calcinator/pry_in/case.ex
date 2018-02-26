@@ -20,10 +20,13 @@ defmodule Calcinator.PryIn.Case do
 
   defp ensure_test_api_stopped do
     case Process.whereis(Test) do
-      nil -> :ok
+      nil ->
+        :ok
+
       pid ->
         api_ref = Process.monitor(pid)
         Process.exit(pid, :kill)
+
         receive do
           {:DOWN, ^api_ref, _, _, _} -> :ok
         after

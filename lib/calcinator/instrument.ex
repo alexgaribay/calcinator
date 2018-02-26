@@ -468,9 +468,10 @@ defmodule Calcinator.Instrument do
 
   """
   defmacro instrument(event, runtime \\ Macro.escape(%{}), fun) do
-    compile = __CALLER__
-              |> strip_caller()
-              |> Macro.escape()
+    compile =
+      __CALLER__
+      |> strip_caller()
+      |> Macro.escape()
 
     quote do
       import Calcinator.Instrument, only: [instrument: 4]
@@ -534,13 +535,13 @@ defmodule Calcinator.Instrument do
 
   # Strips a `Macro.Env` struct, leaving only interesting compile-time metadata.
   @doc false
-  @spec strip_caller(Macro.Env.t) :: %{
-                                       optional(:application) => atom,
-                                       required(:file) => String.t,
-                                       required(:line) => non_neg_integer,
-                                       required(:function) => String.t | nil,
-                                       required(:module) => module
-                                     }
+  @spec strip_caller(Macro.Env.t()) :: %{
+          optional(:application) => atom,
+          required(:file) => String.t(),
+          required(:line) => non_neg_integer,
+          required(:function) => String.t() | nil,
+          required(:module) => module
+        }
   def strip_caller(%Macro.Env{module: mod, function: fun, file: file, line: line}) do
     caller = %{module: mod, function: form_fa(fun), file: file, line: line}
 

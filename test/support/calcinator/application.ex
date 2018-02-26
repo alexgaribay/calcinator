@@ -11,6 +11,7 @@ defmodule Calcinator.Application do
     children = [
       supervisor(Calcinator.Resources.Ecto.Repo.Repo, [])
     ]
+
     opts = [strategy: :one_for_one, name: Calcinator.Supervisor]
     Supervisor.start_link(children, opts)
   end

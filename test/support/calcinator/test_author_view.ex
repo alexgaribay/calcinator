@@ -6,19 +6,17 @@ defmodule Calcinator.TestAuthorView do
   alias Calcinator.{RelatedView, RelationshipView}
 
   use JaSerializer.PhoenixView
-  use Calcinator.JaSerializer.PhoenixView,
-      phoenix_view_module: __MODULE__
+  use Calcinator.JaSerializer.PhoenixView, phoenix_view_module: __MODULE__
 
-  location "/api/v1/test-authors/:id"
+  location("/api/v1/test-authors/:id")
 
   # Attributes
 
-  attributes ~w(name)a
+  attributes(~w(name)a)
 
   # Relationships
 
-  has_many :posts,
-           serializers: Calcinator.TestPostView
+  has_many(:posts, serializers: Calcinator.TestPostView)
 
   # Functions
 

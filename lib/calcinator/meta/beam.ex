@@ -24,28 +24,28 @@ defmodule Calcinator.Meta.Beam do
   @doc """
   Decodes the repo and owner process for the connection.
   """
-  @spec decode(String.t) :: map | no_return
+  @spec decode(String.t()) :: map | no_return
   def decode(encoded) do
     # See https://github.com/phoenixframework/phoenix_ecto/blob/90ba79feef55e31573047f789b3561f4ab7f30f6/lib/
     #   phoenix_ecto/sql/sandbox.ex#L73-L79
     encoded
-    |> Base.url_decode64!
-    |> :erlang.binary_to_term
+    |> Base.url_decode64!()
+    |> :erlang.binary_to_term()
     |> case do
-         {@version, map} when is_map(map) -> map
-         _ -> %{}
-       end
+      {@version, map} when is_map(map) -> map
+      _ -> %{}
+    end
   end
 
   @doc """
   Encodes and versions the repo and current process, so it can be used for the connection ownership
   """
-  @spec encode(repo | token) :: String.t
+  @spec encode(repo | token) :: String.t()
   def encode(repo_or_token) do
     repo_or_token
     |> versioned
-    |> :erlang.term_to_binary
-    |> Base.url_encode64
+    |> :erlang.term_to_binary()
+    |> Base.url_encode64()
   end
 
   @spec get(map) :: map
@@ -79,10 +79,10 @@ defmodule Calcinator.Meta.Beam do
   Puts BEAM metadata into `meta` if its not already present
   """
   def put_new_lazy(meta, repo_or_token_generator) do
-    Map.put_new_lazy meta, @key, fn ->
+    Map.put_new_lazy(meta, @key, fn ->
       repo_or_token_generator.()
       |> encode()
-    end
+    end)
   end
 
   ## Private Functions

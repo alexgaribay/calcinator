@@ -8,17 +8,19 @@ defmodule Calcinator.Resources.TestTag do
   alias Calcinator.Resources.TestPost
 
   schema "tags" do
-    field :name, :string
+    field(:name, :string)
 
     # Associations
 
-    many_to_many :posts,
-                 TestPost,
-                 join_keys: [
-                   tag_id: :id,
-                   post_id: :id
-                 ],
-                 join_through: "posts_tags",
-                 on_replace: :delete
+    many_to_many(
+      :posts,
+      TestPost,
+      join_keys: [
+        tag_id: :id,
+        post_id: :id
+      ],
+      join_through: "posts_tags",
+      on_replace: :delete
+    )
   end
 end

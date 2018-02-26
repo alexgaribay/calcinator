@@ -5,18 +5,21 @@ defmodule Calcinator.Endpoint do
 
   use Phoenix.Endpoint, otp_app: :calcinator
 
-  plug Plug.RequestId
-  plug Plug.Logger
+  plug(Plug.RequestId)
+  plug(Plug.Logger)
 
-  plug Plug.Parsers,
+  plug(
+    Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
     json_decoder: Poison,
-    length: 25_000_000 # 25 MB
+    # 25 MB
+    length: 25_000_000
+  )
 
-  plug Plug.MethodOverride
-  plug Plug.Head
+  plug(Plug.MethodOverride)
+  plug(Plug.Head)
 
-  plug PryIn.Plug
-  plug Calcinator.Router
+  plug(PryIn.Plug)
+  plug(Calcinator.Router)
 end

@@ -12,7 +12,7 @@ defmodule Calcinator.PryIn.Api.Test do
   # Functions
 
   def start_link do
-    GenServer.start_link(__MODULE__, [], [name: __MODULE__])
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def subscribe do
@@ -59,7 +59,7 @@ defmodule Calcinator.PryIn.Api.Test do
 
   defp send_to_listeners(listeners, message) do
     for listener <- listeners do
-      send listener, message
+      send(listener, message)
     end
   end
 end

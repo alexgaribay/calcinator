@@ -3,7 +3,7 @@ defmodule Calcinator.Resources.Ecto.Repo.Repo.Migrations.AddAuthors do
 
   def change do
     create table(:authors) do
-      add :name, :string, null: false
+      add(:name, :string, null: false)
     end
   end
 end

@@ -81,7 +81,8 @@ defmodule Calcinator.Resources.Ecto.Repo do
       supported or `value` was not supported for `name` filter.
 
   """
-  @callback filter(Ecto.Query.t, name :: String.t, value :: String.t) :: {:ok, Ecto.Query.t} | {:error, Document.t}
+  @callback filter(Ecto.Query.t(), name :: String.t(), value :: String.t()) ::
+              {:ok, Ecto.Query.t()} | {:error, Document.t()}
 
   @doc """
   The full list of associations to preload in
@@ -95,7 +96,7 @@ defmodule Calcinator.Resources.Ecto.Repo do
   Should combine the request-specific associations in `Resources.query_options` with any default associations and/or
   transform requested associations to `repo/0`-specific associations.
   """
-  @callback full_associations(Resources.query_options) :: [atom] | Keyword.t
+  @callback full_associations(Resources.query_options()) :: [atom] | Keyword.t()
 
   @doc """
   The `Ecto.Repo` that stores `ecto_schema_module/0`.
@@ -125,7 +126,7 @@ defmodule Calcinator.Resources.Ecto.Repo do
       ## Calcinator.Resources callbacks
 
       @impl Calcinator.Resources
-      @spec allow_sandbox_access(Resources.sandbox_access_token) :: :ok | {:error, :sandbox_access_disallowed}
+      @spec allow_sandbox_access(Resources.sandbox_access_token()) :: :ok | {:error, :sandbox_access_disallowed}
       def allow_sandbox_access(token), do: EctoRepoResources.allow_sandbox_access(token)
 
       @impl Calcinator.Resources
@@ -138,8 +139,8 @@ defmodule Calcinator.Resources.Ecto.Repo do
       def delete(changeset, query_options), do: EctoRepoResources.delete(__MODULE__, changeset, query_options)
 
       @impl Calcinator.Resources
-      @spec get(Resources.id, Resources.query_options) ::
-              {:ok, Ecto.Schema.t} | {:error, :not_found} | {:error, :ownership}
+      @spec get(Resources.id(), Resources.query_options()) ::
+              {:ok, Ecto.Schema.t()} | {:error, :not_found} | {:error, :ownership}
       def get(id, opts), do: EctoRepoResources.get(__MODULE__, id, opts)
 
       @impl Calcinator.Resources
@@ -148,7 +149,7 @@ defmodule Calcinator.Resources.Ecto.Repo do
       end
 
       @impl Calcinator.Resources
-      @spec list(Resources.query_options) :: {:ok, [Ecto.Schema.t], nil} | {:error, :ownership}
+      @spec list(Resources.query_options()) :: {:ok, [Ecto.Schema.t()], nil} | {:error, :ownership}
       def list(query_options), do: EctoRepoResources.list(__MODULE__, query_options)
 
       @impl Calcinator.Resources
@@ -160,19 +161,17 @@ defmodule Calcinator.Resources.Ecto.Repo do
       @impl Calcinator.Resources
       def update(data, params, query_options), do: EctoRepoResources.update(__MODULE__, data, params, query_options)
 
-      defoverridable [
-        allow_sandbox_access: 1,
-        changeset: 1,
-        changeset: 2,
-        delete: 2,
-        full_associations: 1,
-        get: 2,
-        insert: 2,
-        list: 1,
-        sandboxed?: 0,
-        update: 2,
-        update: 3
-      ]
+      defoverridable allow_sandbox_access: 1,
+                     changeset: 1,
+                     changeset: 2,
+                     delete: 2,
+                     full_associations: 1,
+                     get: 2,
+                     insert: 2,
+                     list: 1,
+                     sandboxed?: 0,
+                     update: 2,
+                     update: 3
     end
   end
 
@@ -181,25 +180,22 @@ defmodule Calcinator.Resources.Ecto.Repo do
   @doc """
   Allows access to `Ecto.Adapters.SQL.Sandbox`
   """
-  @spec allow_sandbox_access(Resources.sandbox_access_token) :: :ok | {:error, :sandbox_access_disallowed}
+  @spec allow_sandbox_access(Resources.sandbox_access_token()) :: :ok | {:error, :sandbox_access_disallowed}
   def allow_sandbox_access(%{owner: owner, repo: repo}) do
     repo
     |> List.wrap()
-    |> Enum.reduce_while(
-         :ok,
-         fn repo_element, :ok ->
-           case allow_sandbox_access(repo_element, owner) do
-             :ok -> {:cont, :ok}
-             error = {:error, :sandbox_access_disallowed} -> {:halt, error}
-           end
-         end
-       )
+    |> Enum.reduce_while(:ok, fn repo_element, :ok ->
+      case allow_sandbox_access(repo_element, owner) do
+        :ok -> {:cont, :ok}
+        error = {:error, :sandbox_access_disallowed} -> {:halt, error}
+      end
+    end)
   end
 
   @doc """
   `Ecto.Changeset.t` using the default `Ecto.Schema.t` for `module` with `params`
   """
-  @spec changeset(module, Resources.params) :: {:ok, Ecto.Changeset.t} | {:error, :ownership}
+  @spec changeset(module, Resources.params()) :: {:ok, Ecto.Changeset.t()} | {:error, :ownership}
   def changeset(module, params) when is_map(params), do: module.changeset(module.ecto_schema_module.__struct__, params)
 
   @doc """
@@ -214,7 +210,7 @@ defmodule Calcinator.Resources.Ecto.Repo do
   * `{:error, :ownership}` - Preloading the the `many_to_many` associations that appear in `params` using `module`
       `repo/0` hit an ownership error.
   """
-  @spec changeset(module, Ecto.Schema.t, Resources.params) :: {:ok, Ecto.Changeset.t} | {:error, :ownership}
+  @spec changeset(module, Ecto.Schema.t(), Resources.params()) :: {:ok, Ecto.Changeset.t()} | {:error, :ownership}
   def changeset(module, data, params) when is_map(params) do
     ecto_schema_module = module.ecto_schema_module()
     present_many_to_many_associations = present_many_to_many_associations(ecto_schema_module, params)
@@ -223,9 +219,10 @@ defmodule Calcinator.Resources.Ecto.Repo do
       fields = ecto_schema_module.optional_fields() ++ ecto_schema_module.required_fields()
       cast_changeset = cast(preloaded_data, params, fields)
 
-      validated_changeset = module
-                            |> put_associations(cast_changeset, params, present_many_to_many_associations)
-                            |> ecto_schema_module.changeset()
+      validated_changeset =
+        module
+        |> put_associations(cast_changeset, params, present_many_to_many_associations)
+        |> ecto_schema_module.changeset()
 
       {:ok, validated_changeset}
     end
@@ -234,8 +231,8 @@ defmodule Calcinator.Resources.Ecto.Repo do
   @doc """
   Deletes `changeset` from `module`'s `repo/0`
   """
-  @spec delete(module, changeset :: Ecto.Changeset.t, Resources.query_options) ::
-          {:ok, Ecto.Schema.t} | {:error, :ownership} | {:error, Ecto.Changeset.t}
+  @spec delete(module, changeset :: Ecto.Changeset.t(), Resources.query_options()) ::
+          {:ok, Ecto.Schema.t()} | {:error, :ownership} | {:error, Ecto.Changeset.t()}
   def delete(module, changeset, _query_options) do
     repo = module.repo()
 
@@ -258,8 +255,8 @@ defmodule Calcinator.Resources.Ecto.Repo do
       on `Resources.query_options`.
 
   """
-  @spec get(module, Resources.id, Resources.query_options) ::
-          {:ok, Ecto.Schema.t} | {:error, :not_found} | {:error, :ownership}
+  @spec get(module, Resources.id(), Resources.query_options()) ::
+          {:ok, Ecto.Schema.t()} | {:error, :not_found} | {:error, :ownership}
   def get(module, id, query_options) when is_map(query_options) do
     ecto_schema_module = module.ecto_schema_module()
     repo = module.repo()
@@ -267,8 +264,10 @@ defmodule Calcinator.Resources.Ecto.Repo do
     case wrap_ownership_error(repo, :get, [ecto_schema_module, id]) do
       {:error, :ownership} ->
         {:error, :ownership}
+
       nil ->
         {:error, :not_found}
+
       data ->
         preload(module, data, query_options)
     end
@@ -286,8 +285,8 @@ defmodule Calcinator.Resources.Ecto.Repo do
       according to `Resource.query_iptions` in `opts`.
 
   """
-  @spec insert(module, Ecto.Changeset.t | map, Resources.query_options) ::
-          {:ok, Ecto.Schema.t} | {:error, :ownership} | {:error, Ecto.Changeset.t}
+  @spec insert(module, Ecto.Changeset.t() | map, Resources.query_options()) ::
+          {:ok, Ecto.Schema.t()} | {:error, :ownership} | {:error, Ecto.Changeset.t()}
 
   def insert(module, changeset = %Ecto.Changeset{}, query_options) when is_map(query_options) do
     repo = module.repo()
@@ -314,8 +313,8 @@ defmodule Calcinator.Resources.Ecto.Repo do
         `module` `repo/0`.
 
   """
-  @spec list(module, Resources.query_options) ::
-          {:ok, [Ecto.Schema.t], Alembic.Pagination.t | nil} | {:error, :ownership} | {:error, Document.t}
+  @spec list(module, Resources.query_options()) ::
+          {:ok, [Ecto.Schema.t()], Alembic.Pagination.t() | nil} | {:error, :ownership} | {:error, Document.t()}
   def list(module, query_options) when is_map(query_options) do
     repo = module.repo()
     {:ok, query} = preload(module, module.ecto_schema_module(), query_options)
@@ -342,8 +341,8 @@ defmodule Calcinator.Resources.Ecto.Repo do
       `query_options`.
 
   """
-  @spec update(module, Ecto.Changeset.t, Resources.query_options) ::
-          {:ok, Ecto.Schema.t} | {:error, :ownership} | {:error, Ecto.Changeset.t}
+  @spec update(module, Ecto.Changeset.t(), Resources.query_options()) ::
+          {:ok, Ecto.Schema.t()} | {:error, :ownership} | {:error, Ecto.Changeset.t()}
   def update(module, changeset, query_options) when is_map(query_options) do
     repo = module.repo()
 
@@ -364,8 +363,8 @@ defmodule Calcinator.Resources.Ecto.Repo do
       `query_options`.
 
   """
-  @spec update(module, Ecto.Schema.t, Resources.params, Resources.query_options) ::
-          {:ok, Ecto.Schema.t} | {:error, Ecto.Changeset.t}
+  @spec update(module, Ecto.Schema.t(), Resources.params(), Resources.query_options()) ::
+          {:ok, Ecto.Schema.t()} | {:error, Ecto.Changeset.t()}
   def update(module, data, params, query_options) when is_map(params) and is_map(query_options) do
     with {:ok, changeset} <- module.changeset(data, params) do
       module.update(changeset, query_options)
@@ -389,9 +388,7 @@ defmodule Calcinator.Resources.Ecto.Repo do
   ## Private Functions
 
   def add_not_found(changeset, field, index, id) do
-    add_error changeset,
-              field,
-              "has element at index #{index} whose id (#{id}) does not exist"
+    add_error(changeset, field, "has element at index #{index} whose id (#{id}) does not exist")
   end
 
   defp associated_ids(resource_identifiers, related) when is_atom(related) do
@@ -399,11 +396,11 @@ defmodule Calcinator.Resources.Ecto.Repo do
   end
 
   defp associated_ids(resource_identifiers, empty_struct) do
-    Enum.map resource_identifiers, fn resource_identifier ->
+    Enum.map(resource_identifiers, fn resource_identifier ->
       empty_struct
       |> cast(resource_identifier, [:id])
       |> get_field(:id)
-    end
+    end)
   end
 
   defp allow_sandbox_access(repo, owner) do
@@ -424,17 +421,18 @@ defmodule Calcinator.Resources.Ecto.Repo do
   end
 
   defp apply_filters(module, query, filters) when is_map(filters) do
-    Enum.reduce filters, {:ok, query}, fn {name, value}, acc ->
+    Enum.reduce(filters, {:ok, query}, fn {name, value}, acc ->
       case acc do
         {:ok, acc_query} ->
           apply_filter(module, acc_query, name, value)
+
         acc = {:error, acc_document = %Document{}} ->
           case apply_filter(module, query, name, value) do
             {:ok, _} -> acc
             {:error, filter_document = %Document{}} -> {:error, Document.merge(acc_document, filter_document)}
           end
       end
-    end
+    end)
   end
 
   defp filter(module, query, query_options) when is_map(query_options) do
@@ -446,16 +444,13 @@ defmodule Calcinator.Resources.Ecto.Repo do
     related
     |> where([r], r.id in ^associated_ids)
     |> module.repo().all()
-    |> Enum.into(
-         %{},
-         fn found_associated = %{id: id} ->
-           {id, found_associated}
-         end
-       )
+    |> Enum.into(%{}, fn found_associated = %{id: id} ->
+      {id, found_associated}
+    end)
   end
 
-  @spec paginate(repo :: module, Ecto.Query.t, Resource.query_options) ::
-          {:ok, [Ecto.Schema.t], Alembic.Pagination.t | nil} | {:error, :ownership} | {:error, Document.t}
+  @spec paginate(repo :: module, Ecto.Query.t(), Resource.query_options()) ::
+          {:ok, [Ecto.Schema.t()], Alembic.Pagination.t() | nil} | {:error, :ownership} | {:error, Document.t()}
   defp paginate(repo, query, query_options) do
     paginator().paginate(repo, query, query_options)
   end
@@ -472,6 +467,7 @@ defmodule Calcinator.Resources.Ecto.Repo do
     case data_or_queryable do
       data = %{__struct__: ^ecto_schema_module} ->
         preload_data(module, data, query_options)
+
       queryable ->
         {:ok, Query.preload(queryable, ^module.full_associations(query_options))}
     end
@@ -490,6 +486,7 @@ defmodule Calcinator.Resources.Ecto.Repo do
     case wrap_ownership_error(repo, :preload, [data, association_names]) do
       {:error, :ownership} ->
         {:error, :ownership}
+
       preloaded ->
         {:ok, preloaded}
     end
@@ -506,12 +503,10 @@ defmodule Calcinator.Resources.Ecto.Repo do
     |> ecto_schema_module.__schema__()
     |> Stream.filter(fn name -> Atom.to_string(name) in param_keys end)
     |> Stream.map(fn name -> ecto_schema_module.__schema__(:association, name) end)
-    |> Stream.filter(
-         fn
-           %Ecto.Association.ManyToMany{} -> true
-           _ -> false
-         end
-       )
+    |> Stream.filter(fn
+      %Ecto.Association.ManyToMany{} -> true
+      _ -> false
+    end)
   end
 
   defp put_association(
@@ -524,6 +519,7 @@ defmodule Calcinator.Resources.Ecto.Repo do
     case param do
       list when is_list(list) ->
         put_many_to_many_association(module, changeset, list, field, related)
+
       _ ->
         # use `array` instead of `list` because `array` is JSONAPI type name
         add_error(changeset, field, "must be an array of resource identifiers")
@@ -531,11 +527,11 @@ defmodule Calcinator.Resources.Ecto.Repo do
   end
 
   defp put_associations(module, changeset, params, associations) do
-    Enum.reduce associations, changeset, fn association = %{field: field}, acc_changeset ->
+    Enum.reduce(associations, changeset, fn association = %{field: field}, acc_changeset ->
       # caller should have used `present_many_to_many_associations` to guarantee field will be present
       param = Map.fetch!(params, Atom.to_string(field))
       put_association(module, acc_changeset, param, association)
-    end
+    end)
   end
 
   defp put_many_to_many_association(module, changeset, list, field, related) do
@@ -545,17 +541,16 @@ defmodule Calcinator.Resources.Ecto.Repo do
     {reverse_associated, not_found_changeset} =
       associated_ids
       |> Stream.with_index()
-      |> Enum.reduce(
-           {[], changeset},
-           fn {associated_id, index}, {acc_reverse_associated, acc_changeset} ->
-             case Map.fetch(found_associated_by_id, associated_id) do
-               :error ->
-                 {acc_reverse_associated, add_not_found(acc_changeset, field, index, associated_id)}
-               {:ok, found_associated} ->
-                 {[found_associated | acc_reverse_associated], acc_changeset}
-             end
-           end
-         )
+      |> Enum.reduce({[], changeset}, fn {associated_id, index}, {acc_reverse_associated, acc_changeset} ->
+        case Map.fetch(found_associated_by_id, associated_id) do
+          :error ->
+            {acc_reverse_associated, add_not_found(acc_changeset, field, index, associated_id)}
+
+          {:ok, found_associated} ->
+            {[found_associated | acc_reverse_associated], acc_changeset}
+        end
+      end)
+
     ordered_associated = Enum.reverse(reverse_associated)
     Changeset.put_assoc(not_found_changeset, field, ordered_associated)
   end
@@ -564,21 +559,19 @@ defmodule Calcinator.Resources.Ecto.Repo do
   # See http://stackoverflow.com/a/34946099/470451
   # See https://github.com/elixir-lang/ecto/issues/1212
   defp unload_preloads(updated, preloads) do
-    Enum.reduce(
-      preloads,
-      updated,
-      fn
-        # preloads = [:<field>]
-        (field, acc) when is_atom(field) ->
-          Map.put(acc, field, Map.get(acc.__struct__.__struct__, field))
-        # preloads = [<field>: <association_preloads>]
-        ({field, _}, acc) when is_atom(field) ->
-          Map.put(acc, field, Map.get(acc.__struct__.__struct__, field))
-      end
-    )
+    Enum.reduce(preloads, updated, fn
+      # preloads = [:<field>]
+      field, acc when is_atom(field) ->
+        Map.put(acc, field, Map.get(acc.__struct__.__struct__(), field))
+
+      # preloads = [<field>: <association_preloads>]
+      {field, _}, acc when is_atom(field) ->
+        Map.put(acc, field, Map.get(acc.__struct__.__struct__(), field))
+    end)
   end
 
-  @spec update_preload(module, Ecto.Schema.t, Resources.query_options) :: {:ok, Ecto.Schema.t} | {:error, :ownership}
+  @spec update_preload(module, Ecto.Schema.t(), Resources.query_options()) ::
+          {:ok, Ecto.Schema.t()} | {:error, :ownership}
   defp update_preload(module, updated, query_options) when is_map(query_options) do
     preloads = module.full_associations(query_options)
     repo = module.repo()

@@ -65,7 +65,7 @@ defmodule Calcinator.Authorization do
 
   """
   @callback can?(subject, :create | :index, module) :: boolean
-  @callback can?(subject, :create | :update, Ecto.Changeset.t) :: boolean
+  @callback can?(subject, :create | :update, Ecto.Changeset.t()) :: boolean
   @callback can?(subject, :delete | :show, struct) :: boolean
   @callback can?(subject, action, target :: struct | association_ascent) :: boolean
 

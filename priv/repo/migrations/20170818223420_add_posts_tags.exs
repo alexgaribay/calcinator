@@ -3,8 +3,8 @@ defmodule Calcinator.Resources.Ecto.Repo.Repo.Migrations.AddPostsTags do
 
   def change do
     create table(:posts_tags) do
-      add :post_id, references(:posts), null: false
-      add :tag_id, references(:tags), null: false
+      add(:post_id, references(:posts), null: false)
+      add(:tag_id, references(:tags), null: false)
     end
   end
 end

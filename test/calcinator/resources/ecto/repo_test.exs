@@ -270,8 +270,7 @@ defmodule Calcinator.Resources.Ecto.RepoTest do
     test "with page returns error" do
       Factory.insert_list(3, :test_author)
 
-      assert {:error, %Document{errors: errors}} =
-               TestAuthors.list(%{page: %{number: 2, size: 1}})
+      assert {:error, %Document{errors: errors}} = TestAuthors.list(%{page: %{number: 2, size: 1}})
 
       assert is_list(errors)
       assert length(errors) == 1
@@ -307,8 +306,7 @@ defmodule Calcinator.Resources.Ecto.RepoTest do
       count = 3
       [first_author, second_author, third_author] = Factory.insert_list(count, :test_author)
 
-      assert {:ok, list_authors, nil} =
-               TestAuthors.list(%{page: %Calcinator.Resources.Page{number: 2, size: 1}})
+      assert {:ok, list_authors, nil} = TestAuthors.list(%{page: %Calcinator.Resources.Page{number: 2, size: 1}})
 
       assert length(list_authors) == count
 

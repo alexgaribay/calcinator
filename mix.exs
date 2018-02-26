@@ -7,25 +7,25 @@ defmodule Calcinator.Mixfile do
     [
       aliases: aliases(),
       app: :calcinator,
-      build_embedded: Mix.env == :prod,
+      build_embedded: Mix.env() == :prod,
       deps: deps(),
       description: description(),
       docs: docs(),
       elixir: "~> 1.3",
-      elixirc_paths: elixirc_paths(Mix.env),
+      elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
       preferred_cli_env: [
-        "coveralls": :test,
+        coveralls: :test,
         "coveralls.circle": :test,
         "coveralls.detail": :test,
         "coveralls.html": :test,
         "coveralls.post": :test,
-        "credo": :test,
-        "dialyze": :test,
-        "docs": :test
+        credo: :test,
+        dialyze: :test,
+        docs: :test
       ],
       source_url: "https://github.com/C-S-D/calcinator",
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       test_coverage: [
         tool: ExCoveralls
       ],
@@ -36,14 +36,14 @@ defmodule Calcinator.Mixfile do
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
-  def application, do: application(Mix.env)
+  def application, do: application(Mix.env())
 
   ## Private Functions
 
   defp aliases do
     [
-      "compile": "compile --warnings-as-errors",
-      "test": ["calcinator.ecto.wait", "ecto.drop", "ecto.create --quiet", "ecto.migrate", "test"]
+      compile: "compile --ignore-module-conflict --warnings-as-errors",
+      test: ["calcinator.ecto.wait", "ecto.drop", "ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 
@@ -61,6 +61,7 @@ defmodule Calcinator.Mixfile do
   defp applications(:test) do
     [:ecto, :ex_machina, :faker, :mix, :phoenix, :plug, :postgrex, :pryin | applications(:dev)]
   end
+
   defp applications(_), do: ~w(alembic ja_serializer logger)a
 
   # Dependencies can be Hex packages:
@@ -144,7 +145,7 @@ defmodule Calcinator.Mixfile do
       licenses: ["Apache 2.0"],
       links: %{
         "Docs" => "https://hexdocs.pm/calcinator",
-        "Github" => "https://github.com/C-S-D/calcinator",
+        "Github" => "https://github.com/C-S-D/calcinator"
       },
       maintainers: ["Luke Imhoff"]
     ]

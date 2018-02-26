@@ -120,14 +120,16 @@ if Code.ensure_loaded?(Phoenix.Controller) do
     # Macros
 
     defmacro __using__(opts) do
-      {names, _} = opts
-                   |> Keyword.fetch!(:actions)
-                   |> Code.eval_quoted([], __CALLER__)
+      {names, _} =
+        opts
+        |> Keyword.fetch!(:actions)
+        |> Code.eval_quoted([], __CALLER__)
+
       quoted_configuration = Keyword.fetch!(opts, :configuration)
 
       for name <- names do
         name_quoted_action = quoted_action(name, quoted_configuration)
-        Module.eval_quoted __CALLER__.module, name_quoted_action, [], __CALLER__
+        Module.eval_quoted(__CALLER__.module, name_quoted_action, [], __CALLER__)
       end
     end
 
@@ -151,7 +153,7 @@ if Code.ensure_loaded?(Phoenix.Controller) do
         nil
 
     """
-    @spec get_subject(Conn.t) :: Authorization.subject
+    @spec get_subject(Conn.t()) :: Authorization.subject()
     def get_subject(conn), do: conn.private[:calcinator_subject]
 
     @doc """
@@ -184,12 +186,12 @@ if Code.ensure_loaded?(Phoenix.Controller) do
         end
 
     """
-    @spec put_subject(Conn.t, Authorization.subject) :: Conn.t
+    @spec put_subject(Conn.t(), Authorization.subject()) :: Conn.t()
     def put_subject(conn, subject), do: put_private(conn, :calcinator_subject, subject)
 
     ## Action Functions
 
-    @spec create(Conn.t, Calcinator.params, Calcinator.t) :: Conn.t
+    @spec create(Conn.t(), Calcinator.params(), Calcinator.t()) :: Conn.t()
     def create(conn = %Conn{}, params, calcinator = %Calcinator{}) do
       put_rendered_or_error(
         conn,
@@ -198,11 +200,12 @@ if Code.ensure_loaded?(Phoenix.Controller) do
       )
     end
 
-    @spec delete(Conn.t, Calcinator.params, Calcinator.t) :: Conn.t
+    @spec delete(Conn.t(), Calcinator.params(), Calcinator.t()) :: Conn.t()
     def delete(conn, params = %{"id" => _}, calcinator = %Calcinator{}) do
       case Calcinator.delete(%Calcinator{calcinator | subject: get_subject(conn)}, params) do
         :ok ->
           deleted(conn)
+
         error ->
           put_calcinator_error(conn, error)
       end
@@ -231,7 +234,7 @@ if Code.ensure_loaded?(Phoenix.Controller) do
         end
 
     """
-    @spec get_related_resource(Conn.t, Calcinator.params, Calcinator.t) :: Conn.t
+    @spec get_related_resource(Conn.t(), Calcinator.params(), Calcinator.t()) :: Conn.t()
     def get_related_resource(
           conn = %Conn{
             assigns: %{
@@ -244,27 +247,22 @@ if Code.ensure_loaded?(Phoenix.Controller) do
         ) do
       put_rendered_or_error(
         conn,
-        Calcinator.get_related_resource(
-          %Calcinator{calcinator | subject: get_subject(conn)},
-          params,
-          %{related: related, source: source}
-        )
+        Calcinator.get_related_resource(%Calcinator{calcinator | subject: get_subject(conn)}, params, %{
+          related: related,
+          source: source
+        })
       )
     end
 
-    @spec index(Conn.t, Calcinator.params, Calcinator.t) :: Conn.t
+    @spec index(Conn.t(), Calcinator.params(), Calcinator.t()) :: Conn.t()
     def index(conn, params, calcinator = %Calcinator{}) do
       put_rendered_or_error(
         conn,
-        Calcinator.index(
-          %Calcinator{calcinator | subject: get_subject(conn)},
-          params,
-          %{base_uri: base_uri(conn)}
-        )
+        Calcinator.index(%Calcinator{calcinator | subject: get_subject(conn)}, params, %{base_uri: base_uri(conn)})
       )
     end
 
-    @spec show(Conn.t, Calcinator.params, Calcinator.t) :: Conn.t
+    @spec show(Conn.t(), Calcinator.params(), Calcinator.t()) :: Conn.t()
     def show(conn, params = %{"id" => _}, calcinator = %Calcinator{}) do
       put_rendered_or_error(
         conn,
@@ -298,7 +296,7 @@ if Code.ensure_loaded?(Phoenix.Controller) do
     needed in the `assigns` for the `view_module.type()` of the associated resource since relatinships are composed of
     the `"type"` and `"id"` of the related resource(s).
     """
-    @spec show_relationship(Conn.t, Calcinator.params, Calcinator.t) :: Conn.t
+    @spec show_relationship(Conn.t(), Calcinator.params(), Calcinator.t()) :: Conn.t()
     def show_relationship(
           conn = %Conn{
             assigns: %{
@@ -311,15 +309,14 @@ if Code.ensure_loaded?(Phoenix.Controller) do
         ) do
       put_rendered_or_error(
         conn,
-        Calcinator.show_relationship(
-          %Calcinator{calcinator | subject: get_subject(conn)},
-          params,
-          %{related: related, source: source}
-        )
+        Calcinator.show_relationship(%Calcinator{calcinator | subject: get_subject(conn)}, params, %{
+          related: related,
+          source: source
+        })
       )
     end
 
-    @spec update(Conn.t, Calcinator.params, Calcinator.t) :: Conn.t
+    @spec update(Conn.t(), Calcinator.params(), Calcinator.t()) :: Conn.t()
     def update(conn, params, calcinator = %Calcinator{}) do
       put_rendered_or_error(
         conn,
