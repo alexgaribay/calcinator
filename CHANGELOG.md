@@ -91,6 +91,7 @@
 * [#36](https://github.com/C-S-D/calcinator/pull/36) - [@KronicDeth](https://github.com/KronicDeth)
   * Fix Elixir 1.6 GenServer warning about not defining `init/1` explicitly.
 * [#37[(https://github.com/C-S-D/calcinator/pull/37) - `query_options[:page]` is no longer ignored when passed to `use Calcinator.Resources.Ecto.Repo`'s `list/1` by default.  To restore the old behavior change the paginator to `Calcinator.Resources.Ecto.Repo.Pagination.Ignore`. - [@KronicDeth](https://github.com/KronicDeth)
+* [#42](https://github.com/C-S-D/calcinator/pull/42) - Fix `Unknown type 'Elixir.Resources'` dialyzer errors by adding missing qualifiers or `alias`es. - [@KronicDeth](https://github.com/KronicDeth)
 
 ## v5.0.0
 
