@@ -116,6 +116,9 @@ defmodule Calcinator.Resources.Ecto.Repo.Pagination.Allow do
   end
 
   defp total_size(repo, query) do
-    repo.aggregate(query, :count, :id)
+    query
+    |> exclude(:group_by)
+    |> exclude(:order_by)
+    |> repo.aggregate(:count, :id)
   end
 end

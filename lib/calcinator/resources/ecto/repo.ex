@@ -52,7 +52,7 @@ defmodule Calcinator.Resources.Ecto.Repo do
 
   import Calcinator.Resources, only: [unknown_filter: 1]
   import Ecto.Changeset, only: [add_error: 3, cast: 3, get_field: 2]
-  import Ecto.Query, only: [distinct: 2, where: 3]
+  import Ecto.Query, only: [from: 2, group_by: 3, order_by: 2, where: 3]
 
   alias Alembic.Document
   alias Ecto.{Adapters.SQL.Sandbox, Changeset, Query}
@@ -316,11 +316,18 @@ defmodule Calcinator.Resources.Ecto.Repo do
   @spec list(module, Resources.query_options()) ::
           {:ok, [Ecto.Schema.t()], Alembic.Pagination.t() | nil} | {:error, :ownership} | {:error, Document.t()}
   def list(module, query_options) when is_map(query_options) do
-    repo = module.repo()
-    {:ok, query} = preload(module, module.ecto_schema_module(), query_options)
+    {:ok, preloaded_query} = preload(module, module.ecto_schema_module(), query_options)
 
-    with {:ok, query} <- filter(module, query, query_options) do
-      paginate(repo, distinct(query, true), query_options)
+    with {:ok, filtered_query} <- filter(module, preloaded_query, query_options) do
+      # `group_by` to do `distinct` as `distinct` does not compose, so it's harder to use when sorting
+      # on associatons
+      distinct_query =
+        filtered_query
+        |> sort(query_options)
+        |> group_by([p], p.id)
+
+      module.repo()
+      |> paginate(distinct_query, query_options)
     end
   end
 
@@ -449,6 +456,9 @@ defmodule Calcinator.Resources.Ecto.Repo do
     end)
   end
 
+  defp order_by_direction(:ascending), do: :asc
+  defp order_by_direction(:descending), do: :desc
+
   @spec paginate(repo :: module, Ecto.Query.t(), Resource.query_options()) ::
           {:ok, [Ecto.Schema.t()], Alembic.Pagination.t() | nil} | {:error, :ownership} | {:error, Document.t()}
   defp paginate(repo, query, query_options) do
@@ -553,6 +563,39 @@ defmodule Calcinator.Resources.Ecto.Repo do
 
     ordered_associated = Enum.reverse(reverse_associated)
     Changeset.put_assoc(not_found_changeset, field, ordered_associated)
+  end
+
+  defp sort(query, %Calcinator.Resources.Sort{
+         association: association,
+         direction: direction,
+         field: field
+       }) do
+    order_by_direction = order_by_direction(direction)
+
+    case association do
+      nil ->
+        order_by(query, [{^order_by_direction, ^field}])
+
+      _ ->
+        from(
+          p in query,
+          left_join: a in assoc(p, ^association),
+          # Postgres requires `ORDER BY` columns to be in `GROUP BY` when column is from a `JOIN`
+          group_by: field(a, ^field),
+          order_by: [{^order_by_direction, field(a, ^field)}]
+        )
+    end
+  end
+
+  defp sort(query, sorts) when is_list(sorts) do
+    Enum.reduce(sorts, query, fn sort, acc ->
+      sort(acc, sort)
+    end)
+  end
+
+  defp sort(query, query_options) when is_map(query_options) do
+    sorts = Map.get(query_options, :sorts, [])
+    sort(query, sorts)
   end
 
   # have to unload preloads that may have been updated

@@ -1,8 +1,9 @@
 defmodule Calcinator.Resources.Ecto.RepoTest do
   alias Alembic.{Document, Error, Pagination, Source}
   alias Alembic.Pagination.Page
-  alias Calcinator.Resources.Ecto.Repo.{Factory, TestAuthors, TestComments}
+  alias Calcinator.Resources.Ecto.Repo.{Factory, TestAuthors, TestComments, TestPosts}
   alias Calcinator.Resources.Ecto.Repo.Repo
+  alias Calcinator.Resources.{TestAuthor, TestPost}
 
   # `Application.(get|put)_env(:calcinator, Calcinator.Resource.Ecto.Repo)` must be synchronous
   use ExUnit.Case, async: false
@@ -106,6 +107,157 @@ defmodule Calcinator.Resources.Ecto.RepoTest do
                })
 
       assert length(errors) == 2
+    end
+
+    test "sorting by field on primary data" do
+      [
+        %TestPost{id: first_id, inserted_at: first_inserted_at},
+        %TestPost{id: second_id, inserted_at: second_inserted_at}
+      ] = Factory.insert_list(2, :test_post)
+
+      assert NaiveDateTime.compare(first_inserted_at, second_inserted_at) == :lt
+
+      assert {:ok, [%TestPost{id: ^first_id}, %TestPost{id: ^second_id}], nil} =
+               TestPosts.list(%{
+                 sorts: [%Calcinator.Resources.Sort{direction: :ascending, field: :inserted_at}]
+               })
+
+      assert {:ok, [%TestPost{id: ^second_id}, %TestPost{id: ^first_id}], nil} =
+               TestPosts.list(%{
+                 sorts: [%Calcinator.Resources.Sort{direction: :descending, field: :inserted_at}]
+               })
+    end
+
+    test "sorting by field on association of primary data" do
+      first_author = %TestAuthor{id: first_id, name: "Alice"} = Factory.insert(:test_author, name: "Alice")
+
+      second_author = %TestAuthor{id: second_id, name: "Bob"} = Factory.insert(:test_author, name: "Bob")
+
+      # in opposite order of create from author
+      second_author_post = %TestPost{id: second_author_post_id} = Factory.insert(:test_post, author: second_author)
+
+      first_author_post = %TestPost{id: first_author_post_id} = Factory.insert(:test_post, author: first_author)
+
+      # prove opposite order
+      assert first_id < second_id
+
+      assert NaiveDateTime.compare(second_author_post.inserted_at, first_author_post.inserted_at) == :lt
+
+      assert {:ok, [%TestPost{id: ^first_author_post_id}, %TestPost{id: ^second_author_post_id}], nil} =
+               TestPosts.list(%{
+                 sorts: [
+                   %Calcinator.Resources.Sort{
+                     association: :author,
+                     direction: :ascending,
+                     field: :name
+                   }
+                 ]
+               })
+
+      assert {:ok, [%TestPost{id: ^second_author_post_id}, %TestPost{id: ^first_author_post_id}], nil} =
+               TestPosts.list(%{
+                 sorts: [
+                   %Calcinator.Resources.Sort{
+                     association: :author,
+                     direction: :descending,
+                     field: :name
+                   }
+                 ]
+               })
+    end
+
+    test "sorting by field on association of primary data with paginaton" do
+      first_author = %TestAuthor{id: first_id, name: "Alice"} = Factory.insert(:test_author, name: "Alice")
+
+      second_author = %TestAuthor{id: second_id, name: "Bob"} = Factory.insert(:test_author, name: "Bob")
+
+      # in opposite order of create from author
+      second_author_post = %TestPost{id: second_author_post_id} = Factory.insert(:test_post, author: second_author)
+
+      first_author_post = %TestPost{id: first_author_post_id} = Factory.insert(:test_post, author: first_author)
+
+      # prove opposite order
+      assert first_id < second_id
+
+      assert NaiveDateTime.compare(second_author_post.inserted_at, first_author_post.inserted_at) == :lt
+
+      # ascending
+      assert {:ok, [%TestPost{id: ^first_author_post_id}],
+              %Alembic.Pagination{
+                first: %Alembic.Pagination.Page{number: 1, size: 1},
+                last: %Alembic.Pagination.Page{number: 2, size: 1},
+                next: %Alembic.Pagination.Page{number: 2, size: 1},
+                previous: nil,
+                total_size: 2
+              }} =
+               TestPosts.list(%{
+                 page: %Calcinator.Resources.Page{number: 1, size: 1},
+                 sorts: [
+                   %Calcinator.Resources.Sort{
+                     association: :author,
+                     direction: :ascending,
+                     field: :name
+                   }
+                 ]
+               })
+
+      assert {:ok, [%TestPost{id: ^second_author_post_id}],
+              %Alembic.Pagination{
+                first: %Alembic.Pagination.Page{number: 1, size: 1},
+                last: %Alembic.Pagination.Page{number: 2, size: 1},
+                next: nil,
+                previous: %Alembic.Pagination.Page{number: 1, size: 1},
+                total_size: 2
+              }} =
+               TestPosts.list(%{
+                 page: %Calcinator.Resources.Page{number: 2, size: 1},
+                 sorts: [
+                   %Calcinator.Resources.Sort{
+                     association: :author,
+                     direction: :ascending,
+                     field: :name
+                   }
+                 ]
+               })
+
+      # descending
+      assert {:ok, [%TestPost{id: ^second_author_post_id}],
+              %Alembic.Pagination{
+                first: %Alembic.Pagination.Page{number: 1, size: 1},
+                last: %Alembic.Pagination.Page{number: 2, size: 1},
+                next: %Alembic.Pagination.Page{number: 2, size: 1},
+                previous: nil,
+                total_size: 2
+              }} =
+               TestPosts.list(%{
+                 page: %Calcinator.Resources.Page{number: 1, size: 1},
+                 sorts: [
+                   %Calcinator.Resources.Sort{
+                     association: :author,
+                     direction: :descending,
+                     field: :name
+                   }
+                 ]
+               })
+
+      assert {:ok, [%TestPost{id: ^first_author_post_id}],
+              %Alembic.Pagination{
+                first: %Alembic.Pagination.Page{number: 1, size: 1},
+                last: %Alembic.Pagination.Page{number: 2, size: 1},
+                next: nil,
+                previous: %Alembic.Pagination.Page{number: 1, size: 1},
+                total_size: 2
+              }} =
+               TestPosts.list(%{
+                 page: %Calcinator.Resources.Page{number: 2, size: 1},
+                 sorts: [
+                   %Calcinator.Resources.Sort{
+                     association: :author,
+                     direction: :descending,
+                     field: :name
+                   }
+                 ]
+               })
     end
   end
 

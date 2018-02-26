@@ -93,6 +93,36 @@
     * `junit_formatter` `2.1.0`
     * `postgrex` `0.13.5`
     * `pryin` `1.5.0`
+* [#41](https://github.com/C-S-D/calcinator/pull/41) - [@KronicDeth](https://github.com/KronicDeth)
+  * `c:Calcinator.Resources.list/1` from `use Calcinator.Resources.Ecto.Repo` can sort any of attribute of the primary `Ecto.Schema.t` returned by `c:Calcinator.Resources.Ecto.Repo.ecto_schema_module/0`
+
+    ```elixir
+    TestPosts.list(%{sorts: [%Calcinator.Resources.Sort{direction: :ascending, field: :inserted_at}]})
+    TestPosts.list(%{sorts: [%Calcinator.Resources.Sort{direction: :descending, field: :inserted_at}]})
+    ```
+
+    or any attribute of relationships that are mapped to associations of the primary data
+
+    ```elixir
+    TestPosts.list(%{
+                     sorts: [
+                       %Calcinator.Resources.Sort{
+                         association: :author,
+                         direction: :ascending,
+                         field: :name
+                       }
+                     ]
+                   })
+    TestPosts.list(%{
+                     sorts: [
+                       %Calcinator.Resources.Sort{
+                         association: :author,
+                         direction: :descending,
+                         field: :name
+                       }
+                     ]
+                   })
+    ```
 
 ### Bug Fixes
 * [#36](https://github.com/C-S-D/calcinator/pull/36) - [@KronicDeth](https://github.com/KronicDeth)

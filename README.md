@@ -204,6 +204,39 @@ Returns based on `paginator` and `query_options` `page`
 
 If you want to define your own paginator, it must implement the `Calcinator.Resources.Ecto.Repo.Pagination` behaviour.
 
+##### Sorting
+
+`c:Calcinator.Resources.list/1` from `use Calcinator.Resources.Ecto.Repo` can sort any of attribute of the primary `Ecto.Schema.t` returned by `c:Calcinator.Resources.Ecto.Repo.ecto_schema_module/0`
+
+```elixir
+TestPosts.list(%{sorts: [%Calcinator.Resources.Sort{direction: :ascending, field: :inserted_at}]})
+TestPosts.list(%{sorts: [%Calcinator.Resources.Sort{direction: :descending, field: :inserted_at}]})
+```
+
+or any attribute of relationships that are mapped to associations of the primary data
+
+
+```elixir
+TestPosts.list(%{
+                 sorts: [
+                   %Calcinator.Resources.Sort{
+                     association: :author,
+                     direction: :ascending,
+                     field: :name
+                   }
+                 ]
+               })
+TestPosts.list(%{
+                 sorts: [
+                   %Calcinator.Resources.Sort{
+                     association: :author,
+                     direction: :descending,
+                     field: :name
+                   }
+                 ]
+               })               
+```
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
