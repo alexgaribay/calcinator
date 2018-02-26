@@ -64,6 +64,9 @@
 ## v5.1.0
 
 ### Enhancements
+* [#36](https://github.com/C-S-D/calcinator/pull/36) - [@KronicDeth](https://github.com/KronicDeth)
+  * Update to latest `mix.lock` format.
+  * JaSerializer [supports](https://github.com/vt-elixir/ja_serializer#fields) [sparse fieldsets](http://jsonapi.org/format/#fetching-sparse-fieldsets), but `Calcinator.JaSerializer.PhoenixView`'s `params_to_render_opts/1` was only copying `params["include"]` to `opts[:include]`, so now copy over both `"include"` and `"fields"` if present.
 * [#37[(https://github.com/C-S-D/calcinator/pull/37) - [@KronicDeth](https://github.com/KronicDeth)
   * `Calcinator.Resource.Ecto.Repo.list/2`  supports configurable pagination through
 
@@ -83,9 +86,36 @@
      config :calcinator, Calcinator.Resources.Page, size: [default: 10, maximum: 25]
     ```
   * Update `credo` to `0.8.10` for Elixir 1.6 compatibility.
-* [#36](https://github.com/C-S-D/calcinator/pull/36) - [@KronicDeth](https://github.com/KronicDeth)
-  * Update to latest `mix.lock` format.
-  * JaSerializer [supports](https://github.com/vt-elixir/ja_serializer#fields) [sparse fieldsets](http://jsonapi.org/format/#fetching-sparse-fieldsets), but `Calcinator.JaSerializer.PhoenixView`'s `params_to_render_opts/1` was only copying `params["include"]` to `opts[:include]`, so now copy over both `"include"` and `"fields"` if present.
+* [#41](https://github.com/C-S-D/calcinator/pull/41) - [@KronicDeth](https://github.com/KronicDeth)
+  * `c:Calcinator.Resources.list/1` from `use Calcinator.Resources.Ecto.Repo` can sort any of attribute of the primary `Ecto.Schema.t` returned by `c:Calcinator.Resources.Ecto.Repo.ecto_schema_module/0`
+
+    ```elixir
+    TestPosts.list(%{sorts: [%Calcinator.Resources.Sort{direction: :ascending, field: :inserted_at}]})
+    TestPosts.list(%{sorts: [%Calcinator.Resources.Sort{direction: :descending, field: :inserted_at}]})
+    ```
+
+    or any attribute of relationships that are mapped to associations of the primary data
+
+    ```elixir
+    TestPosts.list(%{
+                     sorts: [
+                       %Calcinator.Resources.Sort{
+                         association: :author,
+                         direction: :ascending,
+                         field: :name
+                       }
+                     ]
+                   })
+    TestPosts.list(%{
+                     sorts: [
+                       %Calcinator.Resources.Sort{
+                         association: :author,
+                         direction: :descending,
+                         field: :name
+                       }
+                     ]
+                   })
+    ```
 
 ### Bug Fixes
 * [#36](https://github.com/C-S-D/calcinator/pull/36) - [@KronicDeth](https://github.com/KronicDeth)
