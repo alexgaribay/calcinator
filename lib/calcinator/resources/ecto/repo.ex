@@ -298,9 +298,9 @@ defmodule Calcinator.Resources.Ecto.Repo do
   end
 
   def insert(module, params, query_options) when is_map(params) and is_map(query_options) do
-    params
-    |> module.changeset()
-    |> module.insert(query_options)
+    with {:ok, changeset} <- module.changeset(params) do
+      module.insert(changeset, query_options)
+    end
   end
 
   @doc """
