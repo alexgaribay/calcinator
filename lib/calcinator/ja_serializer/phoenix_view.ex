@@ -3,6 +3,7 @@ defmodule Calcinator.JaSerializer.PhoenixView do
   An adapter between `JaSerializer.PhoenixView` modules and `Calcinator.View`
   """
 
+  alias Alembic.Fetch.Includes
   alias Alembic.Pagination
   alias Plug.Conn
 
@@ -110,7 +111,7 @@ defmodule Calcinator.JaSerializer.PhoenixView do
 
   def show_relationship(phoenix_view_module, data, options = %{related: related, source: source}) do
     params = Map.get(options, :params, %{})
-    subject = Map.get(options, :subject, nil)
+    subject = options.calcinator.subject
     opts = params_to_render_opts(params)
 
     phoenix_view_module.render("show_relationship.json-api", %{
@@ -151,13 +152,65 @@ defmodule Calcinator.JaSerializer.PhoenixView do
     ]
   end
 
-  defp pagination_to_render_opts_page(pagination, %{base_uri: base_uri}) do
+  defp pagination_to_render_opts_page(pagination, %{base_uri: base_uri, calcinator: calcinator, query_options: query_options}) do
     render_opts_page =
       pagination
       |> Pagination.to_links(base_uri)
+      |> append_query_options_to_links(query_options, calcinator)
       |> links_to_render_opts_page
 
     [page: render_opts_page]
+  end
+
+  defp append_query_options_to_links(links, query_options, calcinator) do
+    encoded_query =
+      query_options
+      |> query_options_to_decoded_query(calcinator)
+      |> URI.encode_query()
+
+    Enum.into(links, %{}, fn {name, value} -> {name, "#{value}&#{encoded_query}"} end)
+  end
+
+  defp query_option_to_decoded_query({:associations, association_or_associations}, _) do
+    association_or_associations
+    |> List.wrap()
+    |> case do
+      [] ->
+        %{}
+
+      associations ->
+        include_value = Includes.to_string(associations)
+
+        %{"include" => include_value}
+    end
+  end
+
+  defp query_option_to_decoded_query({:filters, filters}, _) do
+    Enum.into(filters, %{}, fn {name, value} -> {"filter[#{name}]", value} end)
+  end
+
+  defp query_option_to_decoded_query({:meta, meta}, _) do
+    Enum.into(meta, %{}, fn {name, value} -> {"meta[#{name}]", value} end)
+  end
+
+  # handled by Pagination.to_links
+  defp query_option_to_decoded_query({:page, _}, _), do: %{}
+
+  defp query_option_to_decoded_query({:sorts, sorts}, %Calcinator{resources_module: resources_module}) do
+    {:ok, alembic_fetch_sorts} = Calcinator.Resources.Sorts.to_alembic_fetch_sorts(sorts, resources_module)
+    sort_value = Alembic.Fetch.Sorts.to_string(alembic_fetch_sorts)
+
+    case sort_value do
+      "" -> %{}
+
+      _ -> %{"sort" => sort_value}
+    end
+  end
+
+  defp query_options_to_decoded_query(query_options, configuration) do
+    Enum.reduce(query_options, %{}, fn query_option, acc ->
+      Map.merge(acc, query_option_to_decoded_query(query_option, configuration))
+    end)
   end
 
   defp params_to_render_opts(nil), do: []

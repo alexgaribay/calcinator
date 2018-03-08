@@ -331,22 +331,22 @@ defmodule Calcinator do
           | {:error, Document.t()}
   def index(
         state = %__MODULE__{
-          ecto_schema_module: ecto_schema_module,
-          subject: subject
+          ecto_schema_module: ecto_schema_module
         },
         params,
         %{base_uri: base_uri}
       ) do
-    with :ok <- can(state, :index, ecto_schema_module),
-         :ok <- allow_sandbox_access(state, params),
-         {:ok, list, pagination} <- list(state, params) do
+        with :ok <- can(state, :index, ecto_schema_module),
+             :ok <- allow_sandbox_access(state, params),
+             {:ok, query_options} <- params_to_query_options(state, params),
+             {:ok, list, pagination} <- resources(state, :list, [query_options]) do
       {authorized, authorized_pagination} = authorized(state, list, pagination)
 
       {
         :ok,
         view(state, :index, [
           authorized,
-          %{base_uri: base_uri, pagination: authorized_pagination, params: params, subject: subject}
+          %{base_uri: base_uri, calcinator: state, pagination: authorized_pagination, params: params, query_options: query_options}
         ])
       }
     end
@@ -707,17 +707,6 @@ defmodule Calcinator do
       :ok
     else
       {:error, :unauthorized}
-    end
-  end
-
-  @spec list(t, params) ::
-          {:ok, [Ecto.Schema.t()], Resources.pagination()}
-          | {:error, :timeout}
-          | {:error, Document.t()}
-          | {:error, reason :: term}
-  defp list(calcinator, params) do
-    with {:ok, query_options} <- params_to_query_options(calcinator, params) do
-      resources(calcinator, :list, [query_options])
     end
   end
 
